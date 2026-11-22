@@ -1,0 +1,71 @@
+# Builds the installers of a version and publishes them as a GitHub release.
+# Runs when a version tag (v0.11.2, …) is pushed — which is what git-publish does.
+# The file names never carry the version, so the links in the README always bring the latest release.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Installers (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Windows, os: windows-latest, target: --win }
+          - { name: macOS, os: macos-latest, target: --mac }
+          - { name: Linux, os: ubuntu-latest, target: --linux }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: The version of the tag is the version of package.json
+        shell: bash
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - name: Tests
+        if: runner.os == 'Linux'
+        run: npm test
+      - name: Tools for the .rpm package
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+      - name: Build
+        run: npx --yes electron-builder@26.18.0 ${{ matrix.target }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.dmg
+            dist/*.deb
+            dist/*.rpm
+            dist/*.AppImage
+
+  release:
+    name: Publish the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Checksums and notes
+        run: |
+          (cd out && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          node tools/release-notes.js "${GITHUB_REF_NAME#v}" > notes.md
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" out/* --title "LionFoundry ${GITHUB_REF_NAME#v}" --notes-file notes.md

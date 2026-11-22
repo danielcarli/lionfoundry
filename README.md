@@ -8,9 +8,11 @@
 
 A free, open-source font editor with a clean interface, made for people — and ready for AI agents.
 
+**English** · [Português (Brasil)](README.pt-BR.md)
+
 <sub>by the <b>LionFoundry Team</b> · created and conceived by <b>Daniel Michelon De Carli</b></sub>
 
-![Version 0.11.1](https://img.shields.io/badge/version-0.11.1-24292b)
+![Version 0.11.2](https://img.shields.io/badge/version-0.11.2-24292b)
 ![Status: experimental](https://img.shields.io/badge/status-experimental-cf874b)
 ![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-7b6f9f)
 ![UI languages: English, Português](https://img.shields.io/badge/UI-English%20%7C%20Portugu%C3%AAs-46608a)
@@ -18,6 +20,18 @@ A free, open-source font editor with a clean interface, made for people — and 
 <img src="docs/screenshots/glyph-daca.png" alt="LionFoundry: the letter a being edited, with its points and handles, the metric lines and the panel on the right" width="900">
 
 </div>
+
+## Download
+
+Download the installer for your system. The links always bring the **latest version**; every installer holds the whole app, so nothing else is downloaded while it installs.
+
+- **Windows 10/11** (x64): a setup wizard that lets you choose the folder. → [`LionFoundry-Setup.exe`](https://github.com/danielcarli/lionfoundry/releases/latest/download/LionFoundry-Setup.exe) · or the portable version, with no installation: [`LionFoundry-win-x64.zip`](https://github.com/danielcarli/lionfoundry/releases/latest/download/LionFoundry-win-x64.zip)
+- **macOS** (Apple Silicon and Intel): open the `.dmg` and drag LionFoundry to Applications. → [`LionFoundry-mac-universal.dmg`](https://github.com/danielcarli/lionfoundry/releases/latest/download/LionFoundry-mac-universal.dmg)
+- **Linux** (x64): `.deb` for Ubuntu, Debian, Mint…, `.rpm` for Fedora, RHEL, openSUSE…, or the AppImage for any distribution, with no installation. → [`.deb`](https://github.com/danielcarli/lionfoundry/releases/latest/download/lionfoundry_amd64.deb) · [`.rpm`](https://github.com/danielcarli/lionfoundry/releases/latest/download/lionfoundry.x86_64.rpm) · [AppImage](https://github.com/danielcarli/lionfoundry/releases/latest/download/LionFoundry-x86_64.AppImage)
+
+> The installers are not signed with a paid certificate yet. On first launch, Windows may show "Windows protected your PC" (**More info › Run anyway**) and macOS asks you to allow the app in **System Settings › Privacy & Security › Open Anyway**. The checksums of every file are in [`SHA256SUMS.txt`](https://github.com/danielcarli/lionfoundry/releases/latest/download/SHA256SUMS.txt).
+
+The installers are built by GitHub Actions for each version tag (`.github/workflows/release.yml`), on Windows, macOS and Linux machines, from the code of this repository. They are new: the Linux packages were tried before this release; the Windows and macOS installers have not been tried on a real computer yet — if one does not open, please [tell us](https://github.com/danielcarli/lionfoundry/issues). You can always [run from the source](#get-started).
 
 ## From the first letter to the finished fonts
 
@@ -27,7 +41,7 @@ LionFoundry takes you through the whole job in one window: **draw** the letters,
 - **Easy to read.** One clean window, four themes, every shortcut on one screen.
 - **Familiar.** The words and the keys of the font editors you already know: masters, instances, guides, `V`, `P`, `+`, `−`.
 
-> **LionFoundry is an experimental project.** It covers every step of making a typeface in a first, basic form — see [Where it stands](#where-it-stands) for what is still missing. It has only been run on Linux so far; Windows and macOS are untested. Keep copies of your fonts.
+> **LionFoundry is an experimental project.** It covers every step of making a typeface in a first, basic form — see [Where it stands](#where-it-stands) for what is still missing. It has only been used on Linux so far; on Windows and macOS it is untested. Keep copies of your fonts.
 
 ## What makes it different
 
@@ -196,11 +210,11 @@ LionFoundry is young. This is the honest list.
 | Substitutions, ligatures, kerning and accent placement | Contextual lookups; right-to-left and complex scripts |
 | Flat colour glyphs (COLR/CPAL) | Gradients, SVG and bitmap colour |
 | Undo for everything, a backup on the first save | Automatic saving and recovery after a crash |
-| Runs from the source on Linux | Installers; tests on Windows and macOS; large fonts (CJK) |
+| Installers for Windows, macOS and Linux, built for each version | Tests on Windows and macOS; signed installers; large fonts (CJK) |
 
 ## Get started
 
-There are no installers yet. You need [Node.js](https://nodejs.org) (LTS); Python 3 is only needed for scripts written in Python.
+The quickest way is an installer from [Download](#download). To run from the source you need [Node.js](https://nodejs.org) (LTS). In both cases, Python 3 is only needed for scripts written in Python.
 
 ```sh
 git clone https://github.com/danielcarli/lionfoundry.git
@@ -246,7 +260,7 @@ The font is plain data (JSON) everywhere, and every change goes through one plac
 | `npm run cli -- <command> …` | The command line |
 | `npm run mcp -- <folder>` | The server for AI agents |
 | `npm run examples` | Rebuild the example typefaces (needs Python with `fonttools` and `skia-pathops`) |
-| `npm run dist` | Build installers with electron-builder (not tested yet) |
+| `npm run dist` | Build the installers of the system you are on with electron-builder, into `dist/` (the release workflow does it for the three systems) |
 
 Exported fonts were also checked outside the test suite with the OpenType Sanitizer, fontTools, FreeType and HarfBuzz. Code, comments and documentation are in English; the interface is in English and Portuguese.
 
@@ -254,7 +268,7 @@ Security: `contextIsolation` and `sandbox` on, no `nodeIntegration`, a strict Co
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) — current version: **0.11.1**.
+See [CHANGELOG.md](CHANGELOG.md) — current version: **0.11.2**.
 
 ## Credits
 

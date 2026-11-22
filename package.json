@@ -1,6 +1,6 @@
 {
   "name": "lionfoundry",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "LionFoundry — an experimental open-source platform for type design projects in a world of AI, focused on experience, a modern workflow and a beautiful, intuitive interface made for people. Draw, space, give OpenType features, check and export a typeface; script it in JavaScript and Python.",
   "main": "src/code/electron-main/main.js",
   "desktopName": "lionfoundry.desktop",
@@ -19,7 +19,8 @@
     "dist": "npx --yes electron-builder@26.18.0 --publish never",
     "test:engine": "node tools/test-engine.js",
     "cli": "node tools/cli.js",
-    "mcp": "node tools/mcp-server.js"
+    "mcp": "node tools/mcp-server.js",
+    "release:notes": "node tools/release-notes.js"
   },
   "author": "LionFoundry Team",
   "license": "GPL-3.0-or-later",
@@ -73,7 +74,7 @@
       "shortcutName": "LionFoundry",
       "license": "LICENSE",
       "perMachine": false,
-      "artifactName": "LionFoundry-Setup-${arch}.${ext}",
+      "artifactName": "LionFoundry-Setup.${ext}",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico"
     },
@@ -105,13 +106,21 @@
       "executableName": "lionfoundry",
       "synopsis": "Font editor for type design projects",
       "vendor": "LionFoundry Team",
-      "maintainer": "LionFoundry Team <danielcarli@users.noreply.github.com>",
-      "artifactName": "LionFoundry-${version}-linux-${arch}.${ext}"
+      "maintainer": "LionFoundry Team <danielcarli@users.noreply.github.com>"
     },
     "electronLanguages": [
       "en-US",
       "pt-BR"
-    ]
+    ],
+    "deb": {
+      "artifactName": "lionfoundry_${arch}.${ext}"
+    },
+    "rpm": {
+      "artifactName": "lionfoundry.${arch}.${ext}"
+    },
+    "appImage": {
+      "artifactName": "LionFoundry-${arch}.${ext}"
+    }
   },
   "keywords": [
     "font-editor",

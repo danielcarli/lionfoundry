@@ -2,6 +2,14 @@
 
 LionFoundry is an experimental open-source platform for type design projects in a world of AI. Versions below 1.0 may change formats and behaviour.
 
+## 0.11.2 — 2026-11-22
+
+- **Installers.** A release workflow (`.github/workflows/release.yml`) builds the installers when a version tag is pushed — which is what `git-publish` does — and publishes them as a GitHub release with `SHA256SUMS.txt` and the notes of the version: `LionFoundry-Setup.exe` and `LionFoundry-win-x64.zip` (Windows), `LionFoundry-mac-universal.dmg` (macOS), `lionfoundry_amd64.deb`, `lionfoundry.x86_64.rpm` and `LionFoundry-x86_64.AppImage` (Linux). Every installer holds the whole app. The file names do not carry the version, so the links in the README always bring the latest release.
+- The AppImage and the `.deb` were built and started before this release: the packaged app opens, lists its examples, opens a project and runs a Python script. The `.rpm`, the Windows installer and the macOS image have not been tried yet.
+- **README**: a Download section at the top, as in the other Lion apps, and the whole README also in Portuguese (`README.pt-BR.md`), each linking to the other.
+- `tools/release-notes.js` prints the notes of a version from this file.
+- No change to the app itself.
+
 ## 0.11.1 — 2026-11-22
 
 - **README rewritten** to present the app: what it is for, what makes it different, each part of the work with its screenshot, and a section on working with AI agents (the local server, the command line, scripts, what stays under your control and what is not done yet). The list of what is missing is kept, shorter.
