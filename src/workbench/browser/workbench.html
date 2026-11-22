@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- LionFoundry — Copyright (C) 2026 LionFoundry Team. Created and conceived by Daniel Michelon De Carli. GPL-3.0-or-later. -->
+<html lang="en" data-theme="daca">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>LionFoundry</title>
+  <link rel="icon" href="media/logo.svg">
+  <link rel="stylesheet" href="media/workbench.css">
+  <script type="module" src="bootstrap.js"></script>
+</head>
+<body>
+  <div id="workbench" class="workbench"></div>
+  <!-- loading screen: painted before any script runs, removed once the UI (and the last project) is ready -->
+  <div id="boot" class="boot" role="status" aria-live="polite">
+    <div class="boot-card">
+      <img class="boot-logo" src="media/logo.svg" alt="">
+      <div class="boot-name">LionFoundry</div>
+      <div class="boot-track"><div class="boot-bar"></div></div>
+      <div class="boot-status"></div>
+      <div class="boot-detail"></div>
+      <button type="button" class="boot-skip btn btn-ghost btn-sm" hidden></button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# LionFoundry Example Serif — OpenType features
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn PTB;
+
+# Kerning comes from kerning.plist and groups.plist: LionFoundry builds the kern feature from them
+# (and mark from the anchors of combining accents) when the font is shown or exported.

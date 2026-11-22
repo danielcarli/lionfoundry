@@ -1,0 +1,135 @@
+{
+  "name": "lionfoundry",
+  "version": "0.11.1",
+  "description": "LionFoundry — an experimental open-source platform for type design projects in a world of AI, focused on experience, a modern workflow and a beautiful, intuitive interface made for people. Draw, space, give OpenType features, check and export a typeface; script it in JavaScript and Python.",
+  "main": "src/code/electron-main/main.js",
+  "desktopName": "lionfoundry.desktop",
+  "bin": {
+    "lionfoundry": "tools/cli.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "inspect": "node tools/inspect.js",
+    "test": "node tools/test-ufo.js && node tools/test-engine.js && node tools/check-i18n.js",
+    "test:ufo": "node tools/test-ufo.js",
+    "test:i18n": "node tools/check-i18n.js",
+    "test:e2e": "electron tools/e2e.js",
+    "shots": "electron tools/e2e.js --shots",
+    "examples": "python3 tools/examples/build.py",
+    "dist": "npx --yes electron-builder@26.18.0 --publish never",
+    "test:engine": "node tools/test-engine.js",
+    "cli": "node tools/cli.js",
+    "mcp": "node tools/mcp-server.js"
+  },
+  "author": "LionFoundry Team",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "electron": "^45.2.3"
+  },
+  "productName": "LionFoundry",
+  "build": {
+    "appId": "br.dmdc.lionfoundry",
+    "productName": "LionFoundry",
+    "copyright": "Copyright © 2026 LionFoundry Team",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "examples/**/*",
+      "package.json",
+      "tools/cli.js",
+      "tools/mcp-server.js",
+      "tools/lib.js"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "src/platform/script/node/shim.py"
+    ],
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "executableName": "LionFoundry",
+      "artifactName": "LionFoundry-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "LionFoundry",
+      "license": "LICENSE",
+      "perMachine": false,
+      "artifactName": "LionFoundry-Setup-${arch}.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.graphics-design",
+      "icon": "build/icon.png",
+      "hardenedRuntime": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "artifactName": "LionFoundry-mac-${arch}.${ext}",
+      "identity": "-"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "AppImage"
+      ],
+      "category": "Graphics",
+      "icon": "build/icons",
+      "executableName": "lionfoundry",
+      "synopsis": "Font editor for type design projects",
+      "vendor": "LionFoundry Team",
+      "maintainer": "LionFoundry Team <danielcarli@users.noreply.github.com>",
+      "artifactName": "LionFoundry-${version}-linux-${arch}.${ext}"
+    },
+    "electronLanguages": [
+      "en-US",
+      "pt-BR"
+    ]
+  },
+  "keywords": [
+    "font-editor",
+    "type-design",
+    "typography",
+    "ufo",
+    "opentype",
+    "electron"
+  ],
+  "contributors": [
+    "Daniel Michelon De Carli (creator)"
+  ],
+  "homepage": "https://github.com/danielcarli/lionfoundry",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielcarli/lionfoundry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/danielcarli/lionfoundry/issues"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules
+dist/
+*.log
+dist-release/
+shots/
+__pycache__/
+# the message of the next commit, shipped at the root of each version's zip (never committed)
+commit.txt
+# the script that publishes a version to GitHub (git-publish.cmd/.ps1/.sh: add, commit with commit.txt, tag, push)
+git-publish.*
+# the copy LionFoundry keeps of a project before the first save of a session
+*.ufo.backup/
