@@ -753,5 +753,11 @@
   "shortcuts.constrain": "While dragging a handle: horizontal, vertical or 45°",
   "shortcuts.handle": "Handle horizontal, vertical, nearest 45°",
   "shortcuts.handleAngle": "Type the angle of the handle",
-  "shortcuts.deselect": "Deselect"
+  "shortcuts.deselect": "Deselect",
+  "glyph.tool.scale": "Scale",
+  "glyph.tool.scale.title": "Scale: drag to make the selection larger or smaller, from its centre; click to choose another point to scale from; Shift keeps the proportions",
+  "glyph.scale.needSelection": "Select two or more points first (V), then scale them.",
+  "shortcuts.scale": "Scale tool",
+  "shortcuts.bbox": "Show or hide the box around the selection",
+  "shortcuts.boxKeys": "On a handle of the box: keep the proportions / scale from the centre"
 }

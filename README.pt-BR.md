@@ -12,7 +12,7 @@ Um editor de fontes livre e de código aberto, com uma interface limpa, feito pa
 
 <sub>pelo <b>LionFoundry Team</b> · criado e idealizado por <b>Daniel Michelon De Carli</b></sub>
 
-![Versão 0.11.2](https://img.shields.io/badge/vers%C3%A3o-0.11.2-24292b)
+![Versão 0.12.2](https://img.shields.io/badge/vers%C3%A3o-0.12.2-24292b)
 ![Estado: experimental](https://img.shields.io/badge/estado-experimental-cf874b)
 ![Licença: GPL-3.0](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-7b6f9f)
 ![Interface: English, Português](https://img.shields.io/badge/interface-English%20%7C%20Portugu%C3%AAs-46608a)
@@ -60,7 +60,7 @@ O LionFoundry leva você pelo trabalho inteiro em uma janela só: **desenhar** a
 
 ### Desenhar
 
-Selecionar, caneta, adicionar ponto e remover ponto. Alças que ficam na horizontal, na vertical ou a 45° quando você quer. **Guias** por glifo e **aderir**, para segurar os pontos na linha. Digite a largura e as margens; mova, escale, gire, incline e espelhe. Componentes e âncoras montam as letras acentuadas para você.
+Selecionar, caneta, escala, adicionar ponto e remover ponto. Selecione vários pontos e aparece uma caixa em volta deles: arraste um canto para aumentar ou diminuir a forma, com Shift para manter as proporções e Alt para escalar a partir do centro — os gestos do Illustrator. Alças que ficam na horizontal, na vertical ou a 45° quando você quer. **Guias** por glifo e **aderir**, para segurar os pontos na linha. Digite a largura e as margens; mova, escale, gire, incline e espelhe. Componentes e âncoras montam as letras acentuadas para você.
 
 <div align="center">
 <img src="docs/screenshots/guides-daca.png" alt="Um glifo com guias horizontais, verticais e diagonais, e pontos aderidos a elas" width="860">
@@ -227,6 +227,8 @@ npm start
 
 No Windows também dá para clicar duas vezes em `start.bat`.
 
+**Está começando?** Siga o tutorial: [Do zero à primeira tipografia](docs/tutorial.pt-BR.md) — dois pesos e um itálico, passo a passo, com cada ferramenta explicada.
+
 Duas tipografias de exemplo abrem pela barra lateral, para haver algo de verdade para explorar:
 
 - **LionFoundry Example Sans** — dois masters, Regular e Bold, e duas instâncias entre eles, Medium e SemiBold;
@@ -270,7 +272,7 @@ Segurança: `contextIsolation` e `sandbox` ligados, sem `nodeIntegration`, uma C
 
 ## Histórico de versões
 
-Veja o [CHANGELOG.md](CHANGELOG.md) (em inglês) — versão atual: **0.11.2**.
+Veja o [CHANGELOG.md](CHANGELOG.md) (em inglês) — versão atual: **0.12.2**.
 
 ## Créditos
 

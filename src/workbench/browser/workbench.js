@@ -110,7 +110,7 @@ window.addEventListener('keydown', (e) => {
   else if (mod && key === 's') { e.preventDefault(); if (e.shiftKey) fonts.saveAs(); else fonts.save(); }
   else if (mod && key === 'e') { e.preventDefault(); showExportDialog(services); }
   else if (!mod && !typing && e.key === '?') { e.preventDefault(); showShortcutsDialog(); }
-  else if (mod && key === 'b') { e.preventDefault(); layout.toggleSidebar(); }
+  else if (mod && key === 'b' && !e.shiftKey) { e.preventDefault(); layout.toggleSidebar(); }
   // in a text field Ctrl+Z belongs to the text; everywhere else it undoes the last change to the font
   else if (mod && key === 'z' && !typing) { e.preventDefault(); if (e.shiftKey) fonts.redo(); else fonts.undo(); }
   else if (mod && key === 'y' && !typing) { e.preventDefault(); fonts.redo(); }

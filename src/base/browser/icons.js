@@ -10,6 +10,7 @@ const svg = (body, size = 16) =>
 const paths = {
   pointAdd: '<rect x="3.5" y="12.5" width="8" height="8" rx="1"/><path d="M17 2.5v9M12.5 7h9" stroke-width="2.2"/>',
   pointRemove: '<rect x="3.5" y="12.5" width="8" height="8" rx="1"/><path d="M12.5 7h9" stroke-width="2.2"/>',
+  scale: '<rect x="3.5" y="11.5" width="9" height="9" rx="1"/><path d="M12.5 11.5 20 4M14.5 4H20v5.5"/>',
   magnet: '<path d="M6 4h4v8a2 2 0 0 0 4 0V4h4v8a6 6 0 0 1-12 0z"/><path d="M6 8h4M14 8h4"/>',
   guides: '<path d="M3 8h18M9 3v18"/><path d="M4 20L20 12" stroke-dasharray="2.5 2.5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',

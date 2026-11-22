@@ -753,5 +753,11 @@
   "shortcuts.constrain": "Ao arrastar uma alça: horizontal, vertical ou 45°",
   "shortcuts.handle": "Alça na horizontal, vertical, 45° mais próximo",
   "shortcuts.handleAngle": "Digitar o ângulo da alça",
-  "shortcuts.deselect": "Desfazer a seleção"
+  "shortcuts.deselect": "Desfazer a seleção",
+  "glyph.tool.scale": "Escala",
+  "glyph.tool.scale.title": "Escala: arraste para aumentar ou diminuir a seleção, a partir do centro; clique para escolher outro ponto de origem; Shift mantém as proporções",
+  "glyph.scale.needSelection": "Selecione dois ou mais pontos primeiro (V) e depois mude a escala.",
+  "shortcuts.scale": "Ferramenta Escala",
+  "shortcuts.bbox": "Mostrar ou ocultar a caixa em volta da seleção",
+  "shortcuts.boxKeys": "Numa alça da caixa: manter as proporções / escalar a partir do centro"
 }

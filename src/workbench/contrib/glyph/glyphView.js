@@ -40,8 +40,9 @@ const TOGGLES = [
   { id: 'guides', icon: 'guides' },
   { id: 'weights', icon: 'family' }, // the other weights behind the one being drawn (only in a project that has them)
 ];
-const TOOLS = [{ id: 'select', icon: 'cursor', key: 'V' }, { id: 'pen', icon: 'pen', key: 'P' }, { id: 'add', icon: 'pointAdd', key: '+' }, { id: 'remove', icon: 'pointRemove', key: '−' }];
+const TOOLS = [{ id: 'select', icon: 'cursor', key: 'V' }, { id: 'pen', icon: 'pen', key: 'P' }, { id: 'scale', icon: 'scale', key: 'S' }, { id: 'add', icon: 'pointAdd', key: '+' }, { id: 'remove', icon: 'pointRemove', key: '−' }];
 const HIT = 7; // pixels
+const BOX_PAD = 10; // pixels between the selection and the box drawn around it
 const SNAP = 8; // pixels: how near a line has to be for the magnet to pull
 const GUIDE_KINDS = [['h', 'guideH'], ['v', 'guideV'], ['d', 'guideD']];
 
@@ -61,6 +62,8 @@ export class GlyphView extends ViewPane {
   /** The lines that are holding what is being dragged (shown highlighted). */
   #snapped = [];
   #scratch = document.createElement('canvas').getContext('2d');
+  #scaleRef = null;  // the point a scale is made from, when one was set with the scale tool (font units)
+  #scaleInfo = null; // { sx, sy } while something is being scaled
 
   constructor(services) {
     super(services, 'glyph');
@@ -163,6 +166,7 @@ export class GlyphView extends ViewPane {
   #clearSelection() {
     this.sel.points.clear(); this.sel.anchors.clear(); this.sel.components.clear(); this.sel.guides.clear();
     this.#pen = { contour: -1, out: null };
+    this.#scaleRef = null;
   }
 
   #pruneSelection() {
@@ -337,9 +341,10 @@ export class GlyphView extends ViewPane {
     } else box = this.fonts.shape(g.name).bounds;
     const centre = box ? [Math.round((box.xMin + box.xMax) / 2), Math.round((box.yMin + box.yMax) / 2)] : [0, 0];
     const matrix = typeof make === 'function' ? make(centre) : make;
+    const targets = [...this.#targets().points.keys()]; // the handles of the selected points go with them
     this.#edit('transform', (glyph) => {
       if (pts.length) {
-        for (const [c, i] of pts) { const p = glyph.contours[c][i]; const [x, y] = applyTransform(matrix, p[0], p[1]); p[0] = Math.round(x); p[1] = Math.round(y); }
+        for (const k of targets) { const [c, i] = k.split(',').map(Number); const p = glyph.contours[c][i]; const [x, y] = applyTransform(matrix, p[0], p[1]); p[0] = Math.round(x); p[1] = Math.round(y); }
       } else model.transformGlyph(glyph, matrix);
     });
   }
@@ -613,7 +618,18 @@ export class GlyphView extends ViewPane {
       else if (this.tool === 'pen') this.#penDown(e, px, py);
       else if (this.tool === 'add') this.#addDown(px, py);
       else if (this.tool === 'remove') this.#removeDown(px, py);
-      else this.#selectDown(e, px, py);
+      else {
+        const handle = this.#boxHandleAt(px, py);
+        if (handle) this.#boxDown(px, py, handle);
+        else if (this.tool === 'scale') this.#scaleToolDown(px, py);
+        else this.#selectDown(e, px, py);
+      }
+    });
+    c.addEventListener('pointermove', (e) => {
+      if (e.buttons) return;
+      const rect = c.getBoundingClientRect();
+      const handle = this.#boxHandleAt(e.clientX - rect.left, e.clientY - rect.top);
+      c.style.cursor = handle ? handle.cursor : '';
     });
     c.addEventListener('dblclick', (e) => {
       const rect = c.getBoundingClientRect();
@@ -718,6 +734,115 @@ export class GlyphView extends ViewPane {
       if (single) this.#keepSmooth(g.contours[single.c], single.i);
       this.#draw();
     }, () => { this.#snapped = []; if (started) { if (!this.fonts.commit()) this.render(); } else this.#draw(); });
+  }
+
+  // ---------------------------------------------------------------- scaling the selection (as in Illustrator)
+  /** What a transformation acts on: the selected points with the handles of every selected on-curve point, and the selected anchors. */
+  #targets() {
+    const g = this.glyph;
+    const points = new Map(); // "c,i" → [x, y] as they are now
+    if (!g) return { points, anchors: [] };
+    for (const [c, i] of this.#selectedPoints()) {
+      const contour = g.contours[c]; const n = contour.length;
+      points.set(`${c},${i}`, [contour[i][0], contour[i][1]]);
+      if (contour[i][2] === 'offcurve') continue;
+      for (const j of [i - 1, i + 1]) {
+        const k = model.isClosed(contour) ? (j + n) % n : j;
+        if (k >= 0 && k < n && contour[k][2] === 'offcurve' && !points.has(`${c},${k}`)) points.set(`${c},${k}`, [contour[k][0], contour[k][1]]);
+      }
+    }
+    return { points, anchors: [...this.sel.anchors].filter((i) => g.anchors[i]).map((i) => [i, g.anchors[i].x, g.anchors[i].y]) };
+  }
+
+  /** The box around the selected points and anchors (font units); null with fewer than two of them, or when they are all in one place. */
+  #selectionBox() {
+    const g = this.glyph;
+    if (!g || this.sel.points.size + this.sel.anchors.size < 2) return null;
+    const b = { xMin: Infinity, yMin: Infinity, xMax: -Infinity, yMax: -Infinity };
+    const add = (x, y) => { b.xMin = Math.min(b.xMin, x); b.xMax = Math.max(b.xMax, x); b.yMin = Math.min(b.yMin, y); b.yMax = Math.max(b.yMax, y); };
+    for (const [c, i] of this.#selectedPoints()) add(g.contours[c][i][0], g.contours[c][i][1]);
+    for (const i of this.sel.anchors) if (g.anchors[i]) add(g.anchors[i].x, g.anchors[i].y);
+    return b.xMax > b.xMin || b.yMax > b.yMin ? b : null;
+  }
+
+  /** The eight handles of the box, on screen: corners scale both ways, sides one way. A side with no size has no handle. */
+  #boxHandles() {
+    const box = this.options.bbox === false || (this.tool !== 'select' && this.tool !== 'scale') ? null : this.#selectionBox();
+    if (!box) return [];
+    const left = this.#ox + box.xMin * this.#scale - BOX_PAD; const right = this.#ox + box.xMax * this.#scale + BOX_PAD;
+    const top = this.#oy - box.yMax * this.#scale - BOX_PAD; const bottom = this.#oy - box.yMin * this.#scale + BOX_PAD;
+    const wide = box.xMax > box.xMin; const tall = box.yMax > box.yMin;
+    const out = [];
+    for (const fx of [-1, 0, 1]) {
+      for (const fy of [-1, 0, 1]) {
+        if ((!fx && !fy) || (fx && !wide) || (fy && !tall)) continue;
+        out.push({ fx, fy, box, px: fx < 0 ? left : fx > 0 ? right : (left + right) / 2, py: fy > 0 ? top : fy < 0 ? bottom : (top + bottom) / 2,
+          cursor: fx && fy ? (fx * fy > 0 ? 'nesw-resize' : 'nwse-resize') : fx ? 'ew-resize' : 'ns-resize' });
+      }
+    }
+    return out;
+  }
+
+  #boxHandleAt(px, py) {
+    return this.#boxHandles().find((hd) => Math.abs(hd.px - px) <= HIT && Math.abs(hd.py - py) <= HIT) || null;
+  }
+
+  /**
+   * Drags a scale: `factors(dx, dy, ev)` says, for the movement of the mouse in font units, how much to
+   * scale each way and from which point. One undoable step; the points are always calculated from where
+   * they started, so nothing drifts. `onClick` is called when the mouse did not move.
+   */
+  #scaleDrag(px, py, factors, onClick) {
+    const g = this.glyph;
+    const { points, anchors } = this.#targets();
+    let started = false;
+    this.#track((x, y, ev) => {
+      if (!started && Math.abs(x - px) < 3 && Math.abs(y - py) < 3) return;
+      if (!started) { started = true; this.fonts.begin(t('undo.transform'), { glyphs: [g.name] }); }
+      const f = factors((x - px) / this.#scale, (py - y) / this.#scale, ev);
+      const sx = Math.max(0.01, f.sx); const sy = Math.max(0.01, f.sy); // down to almost nothing, never inside out
+      for (const [k, [x0, y0]] of points) { const [c, i] = k.split(',').map(Number); g.contours[c][i][0] = Math.round(f.ax + (x0 - f.ax) * sx); g.contours[c][i][1] = Math.round(f.ay + (y0 - f.ay) * sy); }
+      for (const [i, x0, y0] of anchors) { g.anchors[i].x = Math.round(f.ax + (x0 - f.ax) * sx); g.anchors[i].y = Math.round(f.ay + (y0 - f.ay) * sy); }
+      this.#scaleInfo = { sx, sy };
+      this.#draw();
+    }, (x, y) => {
+      this.#scaleInfo = null;
+      if (started) { if (!this.fonts.commit()) this.render(); } else if (onClick) onClick(x, y); else this.#draw();
+    });
+  }
+
+  /** A handle of the box: scales from the opposite side (Alt: from the centre; Shift: the same amount both ways). */
+  #boxDown(px, py, handle) {
+    const { fx, fy, box } = handle;
+    const cx = (box.xMin + box.xMax) / 2; const cy = (box.yMin + box.yMax) / 2;
+    const hx = fx < 0 ? box.xMin : box.xMax; const hy = fy < 0 ? box.yMin : box.yMax;
+    this.#scaleDrag(px, py, (dx, dy, ev) => {
+      const ax = ev.altKey || !fx ? cx : fx < 0 ? box.xMax : box.xMin;
+      const ay = ev.altKey || !fy ? cy : fy < 0 ? box.yMax : box.yMin;
+      let sx = fx ? (hx + dx - ax) / (hx - ax) : 1;
+      let sy = fy ? (hy + dy - ay) / (hy - ay) : 1;
+      if (ev.shiftKey) { const same = fx && fy ? (Math.abs(sx - 1) > Math.abs(sy - 1) ? sx : sy) : fx ? sx : sy; sx = same; sy = same; }
+      return { sx, sy, ax, ay };
+    });
+  }
+
+  /**
+   * Scale tool (S): drag anywhere to scale what is selected from its centre — or from the point set
+   * with a click. Shift keeps the proportions.
+   */
+  #scaleToolDown(px, py) {
+    const box = this.#selectionBox();
+    if (!box) { this.notifications.info(t('glyph.scale.needSelection'), 5000); return; }
+    const ref = this.#scaleRef || [(box.xMin + box.xMax) / 2, (box.yMin + box.yMax) / 2];
+    const [x0, y0] = this.#toFont(px, py);
+    const rx = x0 - ref[0]; const ry = y0 - ref[1];
+    const near = 8 / this.#scale; // too close to the reference point that way: that way is left alone
+    this.#scaleDrag(px, py, (dx, dy, ev) => {
+      let sx = Math.abs(rx) > near ? (rx + dx) / rx : 1;
+      let sy = Math.abs(ry) > near ? (ry + dy) / ry : 1;
+      if (ev.shiftKey) { const same = Math.hypot(rx + dx, ry + dy) / (Math.hypot(rx, ry) || 1); sx = same; sy = same; }
+      return { sx, sy, ax: ref[0], ay: ref[1] };
+    }, (x, y) => { this.#scaleRef = this.#toFont(x, y).map(Math.round); this.#draw(); });
   }
 
   /** Add-point tool: a click on the outline puts a point there, without changing the shape. */
@@ -866,6 +991,14 @@ export class GlyphView extends ViewPane {
     const mod = e.ctrlKey || e.metaKey;
     if (e.key === ' ') { e.preventDefault(); this.#space = true; this.canvas.classList.add('can-pan'); return; }
     if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); if (g) { this.#selectAll(); this.#renderPanel(g); } return; }
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'b') {
+      // show or hide the box around the selection (the same keys as in Illustrator)
+      e.preventDefault(); e.stopPropagation();
+      this.options.bbox = this.options.bbox === false;
+      try { localStorage.setItem(OPTIONS_KEY, JSON.stringify(this.options)); } catch { /* storage unavailable */ }
+      this.#draw();
+      return;
+    }
     if (mod && !e.shiftKey && ['c', 'x', 'v'].includes(e.key.toLowerCase())) {
       e.preventDefault();
       if (e.key.toLowerCase() === 'v') this.#paste(); else this.#copy(e.key.toLowerCase() === 'x');
@@ -885,6 +1018,7 @@ export class GlyphView extends ViewPane {
     }
     if (key === 'v') { this.setTool('select'); return; }
     if (key === 'p') { this.setTool('pen'); return; }
+    if (key === 's') { this.setTool('scale'); return; }
     if (key === 'm') { this.setSnap(!this.options.snap); return; }
     if (e.key === '+' || e.key === '=') { e.preventDefault(); this.setTool('add'); return; }
     if (e.key === '-' || e.key === '−') { e.preventDefault(); this.setTool('remove'); return; }
@@ -1145,6 +1279,31 @@ export class GlyphView extends ViewPane {
         ctx.fillStyle = colors.muted;
         ctx.fillText(a.name, px + 9, py);
       });
+    }
+
+    // the box around the selection, with its handles; the point the scale tool works from
+    const handles = this.#boxHandles();
+    this.canvas.dataset.box = '';
+    if (handles.length) {
+      const xs = handles.map((hd) => hd.px); const ys = handles.map((hd) => hd.py);
+      const box = handles[0].box;
+      const left = sx(box.xMin) - BOX_PAD; const right = sx(box.xMax) + BOX_PAD; const top = sy(box.yMax) - BOX_PAD; const bottom = sy(box.yMin) + BOX_PAD;
+      this.canvas.dataset.box = [left, top, right, bottom].map(Math.round).join(',');
+      ctx.lineWidth = 1; ctx.strokeStyle = colors.accent; ctx.setLineDash([]);
+      ctx.strokeRect(Math.round(left) + 0.5, Math.round(top) + 0.5, Math.round(right - left), Math.round(bottom - top));
+      ctx.fillStyle = colors.bg;
+      for (const hd of handles) { ctx.beginPath(); ctx.rect(Math.round(hd.px) - 3.5, Math.round(hd.py) - 3.5, 7, 7); ctx.fill(); ctx.stroke(); }
+      if (this.tool === 'scale') {
+        const ref = this.#scaleRef || [(box.xMin + box.xMax) / 2, (box.yMin + box.yMax) / 2];
+        const rx = Math.round(sx(ref[0])) + 0.5; const ry = Math.round(sy(ref[1])) + 0.5;
+        ctx.beginPath(); ctx.arc(rx, ry, 4, 0, Math.PI * 2); ctx.moveTo(rx - 8, ry); ctx.lineTo(rx + 8, ry); ctx.moveTo(rx, ry - 8); ctx.lineTo(rx, ry + 8); ctx.stroke();
+      }
+      if (this.#scaleInfo) {
+        const pct = (v) => `${Math.round(v * 1000) / 10}%`;
+        const label = Math.abs(this.#scaleInfo.sx - this.#scaleInfo.sy) < 0.0005 ? pct(this.#scaleInfo.sx) : `${pct(this.#scaleInfo.sx)} × ${pct(this.#scaleInfo.sy)}`;
+        ctx.font = font; ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillStyle = colors.accent;
+        ctx.fillText(label, Math.min(...xs), Math.min(...ys) - 8);
+      }
     }
 
     if (this.#marquee) {

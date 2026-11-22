@@ -11,8 +11,8 @@ import { t } from '../../../base/common/nls.js';
 
 const GROUPS = [
   ['project', [['Ctrl+N', 'new'], ['Ctrl+O', 'open'], ['Ctrl+S', 'save'], ['Ctrl+Shift+S', 'saveAs'], ['Ctrl+E', 'export'], ['Ctrl+Z', 'undo'], ['Ctrl+Shift+Z', 'redo'], ['Ctrl+B', 'sidebar'], ['?', 'shortcuts']]],
-  ['tools', [['V', 'select'], ['P', 'pen'], ['+', 'addPoint'], ['−', 'removePoint'], ['M', 'snap'], ['Space', 'pan'], ['Ctrl + / −', 'zoom'], ['Ctrl+0', 'fit'], ['[  ]', 'glyphs']]],
-  ['edit', [['Ctrl+A', 'selectAll'], ['Ctrl+C / X / V', 'clipboard'], ['← ↑ → ↓', 'nudge'], ['Shift + ← ↑ → ↓', 'nudge10'], ['Delete', 'delete'], ['Alt', 'noSnap'], ['Shift', 'constrain'], ['Shift+H / V / D', 'handle'], ['Shift+A', 'handleAngle'], ['Esc', 'deselect']]],
+  ['tools', [['V', 'select'], ['P', 'pen'], ['S', 'scale'], ['+', 'addPoint'], ['−', 'removePoint'], ['M', 'snap'], ['Space', 'pan'], ['Ctrl + / −', 'zoom'], ['Ctrl+0', 'fit'], ['[  ]', 'glyphs']]],
+  ['edit', [['Ctrl+A', 'selectAll'], ['Ctrl+C / X / V', 'clipboard'], ['← ↑ → ↓', 'nudge'], ['Shift + ← ↑ → ↓', 'nudge10'], ['Delete', 'delete'], ['Alt', 'noSnap'], ['Shift', 'constrain'], ['Ctrl+Shift+B', 'bbox'], ['Shift / Alt', 'boxKeys'], ['Shift+H / V / D', 'handle'], ['Shift+A', 'handleAngle'], ['Esc', 'deselect']]],
 ];
 
 export function showShortcutsDialog() {

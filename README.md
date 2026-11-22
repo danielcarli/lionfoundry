@@ -12,7 +12,7 @@ A free, open-source font editor with a clean interface, made for people — and 
 
 <sub>by the <b>LionFoundry Team</b> · created and conceived by <b>Daniel Michelon De Carli</b></sub>
 
-![Version 0.11.2](https://img.shields.io/badge/version-0.11.2-24292b)
+![Version 0.12.2](https://img.shields.io/badge/version-0.12.2-24292b)
 ![Status: experimental](https://img.shields.io/badge/status-experimental-cf874b)
 ![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-7b6f9f)
 ![UI languages: English, Português](https://img.shields.io/badge/UI-English%20%7C%20Portugu%C3%AAs-46608a)
@@ -58,7 +58,7 @@ LionFoundry takes you through the whole job in one window: **draw** the letters,
 
 ### Draw
 
-Select, pen, add point and remove point. Handles that stay horizontal, vertical or at 45° when you want them to. **Guides** per glyph and **snap** to hold your points on the line. Type the width and the side bearings; move, scale, rotate, slant and mirror. Components and anchors build accented letters for you.
+Select, pen, scale, add point and remove point. Select several points and a box appears around them: drag a corner to make the shape larger or smaller, with Shift to keep the proportions and Alt to scale from the centre — the gestures of Illustrator. Handles that stay horizontal, vertical or at 45° when you want them to. **Guides** per glyph and **snap** to hold your points on the line. Type the width and the side bearings; move, scale, rotate, slant and mirror. Components and anchors build accented letters for you.
 
 <div align="center">
 <img src="docs/screenshots/guides-daca.png" alt="A glyph with horizontal, vertical and diagonal guides, and points snapped to them" width="860">
@@ -225,6 +225,8 @@ npm start
 
 On Windows you can also double-click `start.bat`.
 
+**New to type design?** Follow the tutorial: [From scratch to the first typeface](docs/tutorial.md) — two weights and an italic, step by step, with every tool explained.
+
 Two example typefaces open from the side bar, so there is something real to explore:
 
 - **LionFoundry Example Sans** — two masters, Regular and Bold, and two instances between them, Medium and SemiBold;
@@ -268,7 +270,7 @@ Security: `contextIsolation` and `sandbox` on, no `nodeIntegration`, a strict Co
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) — current version: **0.11.2**.
+See [CHANGELOG.md](CHANGELOG.md) — current version: **0.12.2**.
 
 ## Credits
 

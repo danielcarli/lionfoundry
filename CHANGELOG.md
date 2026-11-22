@@ -2,6 +2,28 @@
 
 LionFoundry is an experimental open-source platform for type design projects in a world of AI. Versions below 1.0 may change formats and behaviour.
 
+## 0.12.2 — 2026-11-22
+
+- The English tutorial is now titled **"From scratch to the first typeface"**. Nothing else changed.
+
+## 0.12.1 — 2026-11-22
+
+- **Tutorial: "From zero to your first typeface"** (renamed in 0.12.2) (`docs/tutorial.md`, and `docs/tutorial.pt-BR.md` in Portuguese): from an empty project to a family with two weights and an italic, in plain language. It starts by showing the tools — a numbered picture of the toolbar of the Glyph view, what each tool and button is for, the panel and the scale box — and a short list of the words used. Then ten steps: the project, the first letters, the rest of the alphabet, spacing, accents, kerning, the Bold and the instances, the Italic, checking and exporting.
+- Both READMEs link to it.
+- No change to the app itself.
+
+## 0.12.0 — 2026-11-22
+
+**Scale what is selected, with the gestures of Illustrator**
+- With two or more points (or anchors) selected, the select tool draws a **box around the selection** with eight handles. Drag a corner to make the shape larger or smaller both ways, a side handle to change one way only. **Shift** keeps the proportions; **Alt** scales from the centre instead of from the opposite side. The percentage is shown while dragging.
+- New **Scale tool** (`S`): drag anywhere to scale the selection from its centre; a click chooses another point to scale from (shown as a small target); Shift keeps the proportions.
+- **Ctrl+Shift+B** shows or hides the box, as in Illustrator.
+- The handles of a selected point go with it — in the box, in the scale tool and now also in Move, Scale, Rotate, Slant and Mirror of the panel, which used to leave them behind.
+- One step in Undo for each scale; points are calculated from where they started, so a long drag does not drift.
+- Ctrl+B no longer reacts when Shift is held.
+- The shortcuts screen lists the new keys.
+- Tests: 33 unit tests and 105 end-to-end checks.
+
 ## 0.11.2 — 2026-11-22
 
 - **Installers.** A release workflow (`.github/workflows/release.yml`) builds the installers when a version tag is pushed — which is what `git-publish` does — and publishes them as a GitHub release with `SHA256SUMS.txt` and the notes of the version: `LionFoundry-Setup.exe` and `LionFoundry-win-x64.zip` (Windows), `LionFoundry-mac-universal.dmg` (macOS), `lionfoundry_amd64.deb`, `lionfoundry.x86_64.rpm` and `LionFoundry-x86_64.AppImage` (Linux). Every installer holds the whole app. The file names do not carry the version, so the links in the README always bring the latest release.

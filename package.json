@@ -1,6 +1,6 @@
 {
   "name": "lionfoundry",
-  "version": "0.11.2",
+  "version": "0.12.2",
   "description": "LionFoundry — an experimental open-source platform for type design projects in a world of AI, focused on experience, a modern workflow and a beautiful, intuitive interface made for people. Draw, space, give OpenType features, check and export a typeface; script it in JavaScript and Python.",
   "main": "src/code/electron-main/main.js",
   "desktopName": "lionfoundry.desktop",

@@ -733,6 +733,45 @@ app.whenReady().then(async () => {
     check('the directions of the contours are checked', /already right/.test(await toasts()), await toasts());
     await clearToasts();
 
+    // scaling what is selected: the box with handles (select tool) and the scale tool, as in Illustrator
+    const sizeOf = async () => { const m = /(\d+) × (\d+)/.exec(await js('return [...document.querySelectorAll(".glyph-panel p.muted.small")].map((p) => p.textContent).find((x) => /×/.test(x)) || ""')); return m ? [Number(m[1]), Number(m[2])] : [0, 0]; };
+    const canvasAt = await js('const r = document.querySelector(".glyph-canvas").getBoundingClientRect(); return { x: r.left, y: r.top }');
+    const boxOf = async () => (await js('return document.querySelector(".glyph-canvas").dataset.box')).split(',').map(Number);
+    await canvasKey('v');
+    const noBox = await js('return document.querySelector(".glyph-canvas").dataset.box');
+    await canvasKey('a', { ctrlKey: true });
+    await settle();
+    const size0 = await sizeOf();
+    const box0 = await boxOf();
+    await shot('23-scale-box-daca');
+    const bw = box0[2] - box0[0] - 20; const bh = box0[3] - box0[1] - 20; // the box is drawn 10 pixels outside the points
+    await dragTo(canvasAt.x + box0[2], canvasAt.y + box0[1], canvasAt.x + box0[2] + bw / 2, canvasAt.y + box0[1] - bh / 2);
+    await settle();
+    const size1 = await sizeOf();
+    await key('z', { ctrlKey: true });
+    await settle();
+    const sizeUndone = await sizeOf();
+    check('several points are selected and a corner of their box makes the shape larger',
+      noBox === '' && box0.length === 4 && Math.abs(size1[0] / size0[0] - 1.5) < 0.06 && Math.abs(size1[1] / size0[1] - 1.5) < 0.1 && sizeUndone.join() === size0.join(),
+      `${size0} → ${size1} → ${sizeUndone} · box ${box0}`);
+    await canvasKey('s');
+    const scaleTool = await js('return document.querySelector(".glyph-canvas").dataset.tool');
+    const box1 = await boxOf();
+    const midY = canvasAt.y + (box1[1] + box1[3]) / 2;
+    await dragTo(canvasAt.x + box1[2] - 10, midY, canvasAt.x + box1[2] - 10 + (box1[2] - box1[0] - 20) / 2, midY);
+    await settle();
+    const size2 = await sizeOf();
+    await key('z', { ctrlKey: true });
+    await canvasKey('b', { ctrlKey: true, shiftKey: true });
+    await settle();
+    const hidden = await js('return document.querySelector(".glyph-canvas").dataset.box');
+    await canvasKey('b', { ctrlKey: true, shiftKey: true });
+    await canvasKey('v');
+    await canvasKey('Escape');
+    await settle();
+    check('the scale tool (S) scales from the centre, and Ctrl+Shift+B hides the box',
+      scaleTool === 'scale' && Math.abs(size2[0] / size0[0] - 2) < 0.08 && size2[1] === size0[1] && hidden === '' && (await sizeOf()).join() === size0.join(), `${size0} → ${size2} · ${scaleTool} · "${hidden}"`);
+
     // copy and paste between glyphs
     const oOutline = (await outline()).join();
     await canvasKey('c', { ctrlKey: true });
