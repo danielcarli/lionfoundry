@@ -29,6 +29,9 @@ const SAMPLE_TEXT = {
 };
 let faceCount = 0;
 
+/** The samples, for the line of text of the Glyph view too: [id, label, text]. */
+export const samples = () => SAMPLES.map((id) => [id, t('proof.samples.' + id), SAMPLE_TEXT[id] || t('proof.sample.pangram')]);
+
 export class ProofView extends ViewPane {
   state = { text: '', size: 72, features: {}, compiled: false, steps: false };
   /** The glyph being spaced: position in the shaped text ("line:index"). */
@@ -191,10 +194,7 @@ export class ProofView extends ViewPane {
     ];
     if (f.prev && fonts.glyph(f.prev)) {
       // the pair that is edited: the one that applies now, or a new one between the groups (or glyphs)
-      const font = fonts.font;
-      const gl = model.kerningGroupOf(font, f.prev, 1); const gr = model.kerningGroupOf(font, glyph.name, 2);
-      const has = (l, r) => l && r && font.kerning[l] && typeof font.kerning[l][r] === 'number';
-      const pair = [[f.prev, glyph.name], [f.prev, gr], [gl, glyph.name], [gl, gr]].find(([l, r]) => has(l, r)) || [gl || f.prev, gr || glyph.name];
+      const pair = model.kerningPairFor(fonts.font, f.prev, glyph.name);
       const show = (side) => side.replace(/^public\.kern[12]\./, '@');
       parts.push(h('span.toolbar-sep'),
         h('span.spacing-name', { title: t('proof.spacing.pairTitle') }, `${show(pair[0])} · ${show(pair[1])}`),

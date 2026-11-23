@@ -45,6 +45,8 @@ export class EditorPart {
         class: `tab${v.id === this.layout.activeView ? ' active' : ''}`,
         onclick: () => this.layout.openView(v.id), title: `${v.label} (${v.shortcut})`,
       }, h('span.tab-icon', { html: icon(v.icon, 14) }), h('span.tab-label', v.label))));
+    // in a narrow window (or a language with long names) the tab bar scrolls: keep the open view in sight
+    this.tabs.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   #renderWelcome() {

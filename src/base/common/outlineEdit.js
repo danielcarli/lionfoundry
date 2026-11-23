@@ -324,3 +324,142 @@ export function matchStructure(glyph, reference) {
   }
   return { contours: out, changed };
 }
+
+// ---- points that one master has and the other lacks
+
+/** Length of each segment of a path (lines exactly, curves by walking them). */
+function segmentLengths(path) {
+  let from = path.start;
+  return path.segs.map((seg) => {
+    const c = controls(from, seg);
+    from = seg.to;
+    if (!c) return 0;
+    return c.length === 2 ? Math.hypot(c[1][0] - c[0][0], c[1][1] - c[0][1]) : length(c);
+  });
+}
+
+/** Where each on-curve point of a closed path is along it, from 0 at the start point. */
+function fractionsOf(path) {
+  const lengths = segmentLengths(path);
+  const total = lengths.reduce((s, l) => s + l, 0) || 1;
+  const out = [0];
+  let acc = 0;
+  for (let i = 0; i < lengths.length - 1; i++) { acc += lengths[i]; out.push(acc / total); }
+  return out;
+}
+
+/** Puts an on-curve point at a fraction (0–1) of the length of a closed contour. */
+function insertAtFraction(contour, fraction) {
+  const path = toPath(contour);
+  const lengths = segmentLengths(path);
+  const total = lengths.reduce((s, l) => s + l, 0);
+  let target = fraction * total;
+  let k = 0;
+  while (k < lengths.length - 1 && target > lengths[k]) { target -= lengths[k]; k++; }
+  let from = k === 0 ? path.start : path.segs[k - 1].to;
+  const c = controls(from, path.segs[k]);
+  if (!c) return null;
+  let t = lengths[k] ? target / lengths[k] : 0.5;
+  if (c.length > 2) {
+    // the t whose first part has the length wanted
+    let lo = 0; let hi = 1;
+    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (length(split(c, mid)[0]) < target) lo = mid; else hi = mid; }
+    t = (lo + hi) / 2;
+  }
+  const res = insertPoint(contour, k, t);
+  return res ? res.contour : null;
+}
+
+/**
+ * Pairs the on-curve points of two closed contours by where they are along them (both start at their
+ * start point): [[i, j], …] for the points that agree; the others have no partner.
+ */
+function alignPoints(fa, fb, gap = 0.08) {
+  const n = fa.length; const m = fb.length;
+  const cost = Array.from({ length: n }, () => new Array(m).fill(Infinity));
+  const from = Array.from({ length: n }, () => new Array(m).fill(null));
+  cost[0][0] = 0; // the start points go together
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (i === 0 && j === 0) continue;
+      const options = [];
+      if (i > 0 && j > 0) options.push([cost[i - 1][j - 1] + Math.abs(fa[i] - fb[j]), 'match']);
+      if (i > 0) options.push([cost[i - 1][j] + gap, 'skipA']);
+      if (j > 0) options.push([cost[i][j - 1] + gap, 'skipB']);
+      const best = options.reduce((x, y) => (y[0] < x[0] ? y : x));
+      cost[i][j] = best[0]; from[i][j] = best[1];
+    }
+  }
+  const pairs = [];
+  let i = n - 1; let j = m - 1;
+  while (i > 0 || j > 0) {
+    const step = from[i][j];
+    if (step === 'match') { pairs.unshift([i, j]); i--; j--; } else if (step === 'skipA') i--; else j--;
+  }
+  pairs.unshift([0, 0]);
+  return pairs;
+}
+
+/** For each point without a partner, where to put one in the other contour (a fraction along it). */
+function missingIn(fa, fb, pairs, side) {
+  // side 0: points of b that a lacks; side 1: points of a that b lacks
+  const [mine, theirs] = side === 0 ? [fb, fa] : [fa, fb];
+  const matched = new Set(pairs.map((p) => p[side === 0 ? 1 : 0]));
+  const out = [];
+  for (let k = 0; k < mine.length; k++) {
+    if (matched.has(k)) continue;
+    let before = null; let after = null;
+    for (const p of pairs) {
+      const [own, other] = side === 0 ? [p[1], p[0]] : [p[0], p[1]];
+      if (own < k) before = [mine[own], theirs[other]];
+      if (own > k && !after) after = [mine[own], theirs[other]];
+    }
+    after ||= [1, 1];
+    const span = after[0] - before[0];
+    out.push(before[1] + (span > 0 ? (mine[k] - before[0]) / span : 0.5) * (after[1] - before[1]));
+  }
+  return out;
+}
+
+/** A straight segment as a curve with its handles at a third and two thirds: the shape stays. */
+function lineToCurve(path, k) {
+  const seg = path.segs[k];
+  const from = k === 0 ? path.start : path.segs[k - 1].to;
+  seg.offs = [off(lerp(from, seg.to, 1 / 3)), off(lerp(from, seg.to, 2 / 3))];
+  seg.to[2] = 'curve';
+}
+
+/**
+ * Gives two versions of a glyph (two masters) the same points, without changing their shapes: each
+ * closed contour gets the on-curve points the other has and it lacks, at the same place along the
+ * contour, and a straight segment facing a curve becomes a curve with its handles on the line.
+ * Contours are paired in their order; open contours are left as they are.
+ * @returns {{ a: Array, b: Array, added: number } | null} new contours for both (null when the numbers of contours differ)
+ */
+export function addMissingPoints(a, b) {
+  if (a.contours.length !== b.contours.length) return null;
+  const outA = []; const outB = []; let added = 0;
+  a.contours.forEach((ca, i) => {
+    let cb = b.contours[i];
+    let pa = toPath(ca); let pb = toPath(cb);
+    if (!pa || !pb || !pa.closed || !pb.closed) { outA.push(ca); outB.push(cb); return; }
+    const fa = fractionsOf(pa); const fb = fractionsOf(pb);
+    const pairs = alignPoints(fa, fb);
+    let nextA = ca;
+    for (const f of missingIn(fa, fb, pairs, 0).sort((x, y) => y - x)) { const r = insertAtFraction(nextA, f); if (r) { nextA = r; added++; } }
+    for (const f of missingIn(fa, fb, pairs, 1).sort((x, y) => y - x)) { const r = insertAtFraction(cb, f); if (r) { cb = r; added++; } }
+    // the same kind of segment on both sides
+    pa = toPath(nextA); pb = toPath(cb);
+    if (pa.segs.length === pb.segs.length) {
+      let fromA = pa.start; let fromB = pb.start;
+      const kinds = pa.segs.map((seg, k) => { const x = controls(fromA, seg); const y = controls(fromB, pb.segs[k]); fromA = seg.to; fromB = pb.segs[k].to; return [x ? x.length : 0, y ? y.length : 0]; });
+      kinds.forEach(([x, y], k) => {
+        if (x === 2 && y === 4) { lineToCurve(pa, k); added++; } else if (x === 4 && y === 2) { lineToCurve(pb, k); added++; }
+      });
+      nextA = fromPath(pa); cb = fromPath(pb);
+    }
+    outA.push(nextA); outB.push(cb);
+  });
+  return { a: outA, b: outB, added };
+}
+

@@ -28,8 +28,10 @@ function negotiateLocale(requested) {
     const exact = LOCALES.find((s) => s.toLowerCase() === tag);
     if (exact) return exact;
     const [lang, region] = tag.split(/[-_]/);
-    if (lang === 'pt') return 'pt-BR';
-    const base = LOCALES.find((s) => s.toLowerCase() === lang);
+    // Portuguese: Brazil (and a bare "pt") gets pt-BR; every other region follows the European norm.
+    if (lang === 'pt') return region && region !== 'br' ? 'pt-PT' : 'pt-BR';
+    // "de-AT" → de, "it-CH" → it (the first catalog of that language)
+    const base = LOCALES.find((s) => s.toLowerCase() === lang) || LOCALES.find((s) => s.toLowerCase().split('-')[0] === lang);
     if (base) return base;
   }
   return 'en';

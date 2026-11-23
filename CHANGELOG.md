@@ -2,6 +2,103 @@
 
 LionFoundry is an experimental open-source platform for type design projects in a world of AI. Versions below 1.0 may change formats and behaviour.
 
+## 0.17.0 — 2026-11-23
+
+**Comfort while drawing** (second half of phase 2 of the plan to come closer to the way type designers work in the industry-standard software)
+- **Background** of each glyph, in each master: **Copy to background** keeps a copy of the drawing behind it, **Swap with background** brings the background to the front to be edited (and the drawing goes behind), **Clear background** empties it; `Alt` does it in every master. A new toolbar button shows or hides it (it turns on by itself after a copy). It is saved in the project as UFO layers — `public.background` for the default layer and `<layer>.background` for the layer of another master — so other font editors read it too; the layers go away when no glyph has a background.
+- **Rotate** (`R`): drag to turn the selection around its centre, or around the point set with a click (the same point the scale tool uses); `Shift` turns in steps of 15°, and the angle shows while dragging.
+- **Ruler** (`L`): drag a line to see its length and angle, and the distance between each place where it crosses the outline — the thickness of every stroke it runs through (components included). It stays until another tool is taken or `Esc`; `Shift` keeps it at steps of 45°.
+- **Lasso**: with the select tool, `Alt` + drag from an empty place draws a free line around the points to take. (The plan said `Shift+V`, which already makes handles vertical.)
+- **Align points** (`Ctrl+Shift+A`): the selected points go on one horizontal line when they lie across, or one vertical line when they lie up and down, at their average; their handles go with them.
+- `Tab` and `Shift+Tab` go to the next and previous point of the contour.
+- The toolbar of the Glyph view hides the button labels until there is room for them all, and on a narrow window it breaks into two clean rows (tools above; "show" buttons and zoom below) instead of leaving two buttons alone on the second row.
+- Left out of this phase for now: "open corner" and "reconnect nodes", which belong with corner components (phase 7).
+
+**Documents and tests**
+- READMEs and tutorials in the seven languages: the new tools in the Draw section and in "Where it stands"; "Measure and compare" in step 2 of the tutorial; the numbered picture of the toolbar made again (rotate 10, ruler 11, snap 12, background 18; zoom 19 and fit 20).
+- New messages (27) in the seven languages, without review by native speakers for the five translated ones.
+- Tests: 39 unit tests (new: the background written as UFO layers and read back, per master) and 129 end-to-end checks (ruler across a stem, rotation by 90° and undo, copy and swap with the background, `Tab`, align, lasso).
+
+## 0.16.0 — 2026-11-23
+
+**Operations on contours** (first half of phase 2 of the plan to come closer to the way type designers work in the industry-standard software)
+- **Remove overlap** (`Ctrl+Shift+O`, and a button in the Outline section of the panel): the shapes that overlap become one outline. It works on the curves themselves — they are cut where they cross and joined again — so curves stay curves; nothing is turned into polygons. Contours that do not overlap anything are left exactly as they were, start point included; a counter (wound the other way) stays a counter.
+- **Union, Subtract, Intersect**, with contours selected (a point of a contour is enough): join the selected contours, cut them out of the others like a cookie cutter, or keep only where they overlap.
+- **Knife** (`E`): drag a line across shapes and they are cut into closed parts, along the line; `Shift` keeps it at steps of 45°.
+- **Rectangle and ellipse** (`F`; `F` again switches between them): drag from corner to corner; `Shift` makes a square or a circle, `Alt` draws from the centre. The size shows while dragging; the new contour is drawn counter-clockwise, as an outer contour, and the ellipse has its points at the extremes.
+- **Add extremes** (panel): points at the horizontal and vertical extremes of the curves, of the selected contours or of all, without changing the shape. With the add-point tool, `Shift`+click puts the point at the extreme of the curve nearest to the click.
+- **Tidy up** (`Ctrl+Shift+T`, and a button): removes points that sit on the point before them, points in the middle of straight lines, and the handles of curves that are straight.
+- **Points on top of each other** are marked with a red ring, and the panel says how many there are.
+- `Alt` with Remove overlap, Add extremes, Tidy up and the knife does it in every master (each one on its own; the result may need Fix compatibility).
+- **Export › Remove overlaps**: the exported fonts get their overlaps removed; the project keeps its contours as they are.
+- If an operation cannot work out a shape cleanly (curves that only touch at one point, for example), nothing changes and a message says so — a shape is never lost.
+
+**Documents and tests**
+- READMEs and tutorials in the seven languages: the tools in the Draw section and in "Where it stands"; "Building from shapes" in step 2 of the tutorial; the numbered picture of the toolbar made again (knife 8, rectangle and ellipse 9; the numbers after them moved by two).
+- New messages (49) in the seven languages, without review by native speakers for the five translated ones.
+- Tests: 38 unit tests (new: the operations on lines and curves, the knife, extremes, tidying, primitives and exporting without overlaps). The operations were also checked outside the suite on 700 random sets of squares and circles (2,800 operations, no failure) and on overlapping letters of the example typefaces (area kept within 0.25%). 124 end-to-end checks (rectangle by dragging, remove overlap, knife, ellipse, extremes, undo).
+
+## 0.15.0 — 2026-11-23
+
+**The masters side by side** (phase 4 of the plan to come closer to the way type designers work in the industry-standard software)
+- **All masters** (toolbar of the Glyph view, only in a project with masters): the glyph being edited in every master, in a row under the line of text, with the name of each master under it. The master being edited is in the accent colour; a master that cannot be interpolated with it is marked `≠` in red. A double-click on one works in that master.
+- **Compatibility**: the on-curve points get numbers (`2.3` is the third point of the second contour), a dashed line goes from each point to the same point in the other masters of the group, and a red ring marks a point that has no counterpart there or whose type differs.
+- **Preview**: a strip under the canvas with the line of text at any position between the masters, and a slider to move along the weight axis. It starts at a style of the family between the masters; glyphs that cannot be interpolated are shown from the nearer master and counted. Kerning is interpolated too.
+- **Add missing points** (panel, Master compatibility, when the number or the kind of points differs): each of the two drawings gets the points the other has, at the same place along the contour, and neither shape changes. A straight segment facing a curve becomes a curve with its handles on the line.
+- **`Alt` changes every master**: with the add-point tool, the same point goes at the same place of the same segment in every master whose contour has the same segments; with the remove-point tool, the same point comes out where the contour has the same points; **Reverse direction** and **Correct direction** with `Alt` turn the contours of every master. One undo takes back the change in all of them.
+- The shortcuts screen lists `Alt` for every master.
+
+**Seven languages for now**
+- Chinese (简体中文), Japanese (日本語) and Korean (한국어) were taken out of the interface and the documents. The interface, the READMEs and the tutorials are in English, Português (Brasil), Português (Portugal), Español, Français, Deutsch and Italiano. This is a decision for now and may be reviewed; the catalogs and documents removed are in version 0.14.0.
+- A language chosen in an earlier version that is no longer offered falls back to the language of the system.
+
+**Documents and tests**
+- READMEs and tutorials: a paragraph on the masters side by side (with a new picture) in the family section, and in step 7 of the tutorial; "match them by hand" is gone, since the app now adds the missing points.
+- New messages (13) in the seven languages, without review by native speakers for the five translated ones.
+- Tests: 37 unit tests (new: points added between masters, the interpolation helpers) and 121 end-to-end checks (the row of masters and the double-click, the compatibility map, `Alt` with the add-point tool, Add missing points, the preview, undo in every master).
+
+## 0.14.0 — 2026-11-23
+
+**Edit inside a line of text, as in other font editors** (phase 1 of the plan to come closer to the way type designers work in the industry-standard software)
+- The Glyph view is now **a line of text**. One glyph is being edited — points, handles, anchors, the panel — and the others are shown filled, with their spacing and kerning. Kerning shows where it moved a glyph: a blue band when it brings two glyphs closer, amber when it moves them apart, with the value under it. With **Metrics** on, each glyph shows its side bearings under it.
+- **A text field** above the canvas: type or paste a word, several lines too. `/name` puts a glyph that has no character (`/a.sc`); characters the font does not have yet show as empty boxes, and become the glyph as soon as it exists. **Samples…** offers the texts of the proof.
+- **Text tool (`T`)**, the first of the tools: click to put the cursor, type to put glyphs at it, `Backspace` and `Delete` take them out, `Enter` starts a new line, the arrows move the cursor. The glyph after the cursor is the one being edited, everywhere in the app. `Esc` goes back to the select tool to draw it; a double-click on a glyph of the line does the same with that glyph.
+- **Spacing and kerning from the keyboard**, with the text tool: `Alt + ← →` the left side bearing of the glyph after the cursor, `Ctrl + ← →` its right side bearing, `Ctrl+Alt + ← →` its kerning with the glyph before it (← closer, → apart); `Shift` for 10 units at a time. On the Mac, Cmd and Option. The same logic as in the industry-standard software — the modifier picks the side, the arrow the direction — with one set of keys for every system.
+- The kerning written is the pair that applies already (glyph or group); when none does, the pair between the groups of the two glyphs. The proof follows the same rule (it is now one function, `kerningPairFor`).
+- **Double-click** another glyph of the line, with any other tool, to edit it without losing the text.
+- `[` `]` and now also `Home` `End` swap the glyph being edited for the previous or next glyph of the font; the rest of the line stays (for spacing tests such as `nnonn` with the alphabet in the middle). Opening a glyph from the font view, the check view or the proof starts a new line with that glyph, as before.
+- The panel has a new **Kerning** section with the pair before and the pair after the glyph being edited.
+- The shortcuts screen (`?`) has a group for the text tool.
+- When zoomed out, the labels of the metric lines no longer pile up.
+- READMEs and tutorials in the ten languages: the line of text in the spacing section, with a new picture, and a paragraph on spacing in the Glyph view in step 4 of the tutorial. The numbered picture of the toolbar was made again with the text tool (numbers 2 to 15 moved by one).
+- New messages (15) in the ten languages, without review by native speakers for the eight translated ones.
+- Tests: 36 unit tests (two new: the text of the line and the kerning pair rule) and 119 end-to-end checks (typing, the cursor, spacing and kerning keys with undo, double-click, `[` `]`, `/name`, characters the font lacks, samples).
+
+## 0.13.0 — 2026-11-22
+
+**Ten languages**
+- The interface is now in **English, Português (Brasil), Português (Portugal), Español, Français, Deutsch, Italiano, 简体中文, 日本語 and 한국어** — the ten languages of the Lion apps. Every catalog has all 761 messages. Choose the language in the status bar; "automatic" follows the system.
+- The system language is matched more carefully: `pt-PT` and Portuguese outside Brazil get the European catalog, `pt` and `pt-BR` the Brazilian one; a regional tag falls back to its language (`de-AT` → Deutsch, `zh-TW` → 简体中文, the only Chinese catalog).
+- **The translations were written without review by native speakers.** English and Brazilian Portuguese are the reviewed texts; the European Portuguese catalog was adapted from the Brazilian one. Type terms follow the usual words of each language (for example *Dickte*, *Vorbreite* and *Nachbreite* in German, *chasse* and *approches* in French, 母版 and 字偶间距 in Chinese); feature tags, glyph names and theme names are not translated. Corrections are welcome.
+- The packaged app carries the Chromium language files of the new languages.
+
+**A README and a tutorial in every language**
+- `README.<language>.md` and `docs/tutorial.<language>.md` for the eight new languages, each with a line that links the ten. The names of buttons, views and menus in the tutorials are taken from the catalogs, so they are the ones on the screen. The pictures still show the English interface; each README also shows the Glyph view in its own language.
+- The translated READMEs point to the English one for the developer section, which stays in English like the code.
+
+**Layout, found while trying the new languages**
+- The tab bar keeps every view name on one line and scrolls sideways when the window is too narrow for all of them (in Japanese the names used to break in two lines). The open view is kept in sight.
+- The width, left and right fields of the glyph panel stay aligned when a label needs two lines.
+- The window no longer grows wider than the screen when the row of tabs does not fit.
+
+**Windows: the icon of the installed app**
+- On an installed copy, the Start menu and the task bar could show a blank icon although the installer showed the right one. The cause could not be reproduced: a Windows build made with the same tools carries the icon in `LionFoundry.exe`, with the six sizes of `build/icon.ico`. Two things changed so that it no longer depends on that alone: the icon file is shipped beside the app (`resources/icon.ico`) and the window is given it explicitly, and the release workflow now reads the packaged `LionFoundry.exe` and reports on the run page when it has no icon (`tools/check-win-icon.js`, `npm run check:win-icon -- <exe> [icon.ico]`).
+- **Not tested on Windows.** If the icon is still blank after installing this version, Windows may be showing a cached icon: unpin LionFoundry from the task bar, run `ie4uinit.exe -show` (or restart Explorer, or sign out and in), and open it again from the Start menu.
+
+**Other**
+- The READMEs say what is known about each installer: the Windows one has been installed and opened on a real computer; the macOS one has not been tried.
+- Tests: 34 unit tests (one new, for the languages) and 114 end-to-end checks (the app is opened in each of the eight new languages).
+
 ## 0.12.2 — 2026-11-22
 
 - The English tutorial is now titled **"From scratch to the first typeface"**. Nothing else changed.

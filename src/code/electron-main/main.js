@@ -19,6 +19,21 @@ const { ScriptMainService } = require('../../platform/script/electron-main/scrip
 const { setLocale, t } = require('../../platform/nls/common/nls');
 
 const APP_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+/**
+ * The icon of the window (and, on Windows, of its task bar button). The installed app reads it from a
+ * real file beside the app — an .ico with every size on Windows — so it does not depend on the icon
+ * inside the executable being found. From the source, the files of the repository are used.
+ */
+function windowIcon() {
+  const name = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+  const candidates = [
+    app.isPackaged ? path.join(process.resourcesPath, name) : null,
+    process.platform === 'win32' ? path.join(APP_ROOT, 'build', 'icon.ico') : null,
+    path.join(APP_ROOT, 'src', 'workbench', 'browser', 'media', 'icon.png'),
+  ];
+  return candidates.find((file) => file && fs.existsSync(file));
+}
 const SCHEME = 'app';
 
 protocol.registerSchemesAsPrivileged([
@@ -84,7 +99,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     title: 'LionFoundry',
-    icon: path.join(APP_ROOT, 'src', 'workbench', 'browser', 'media', 'icon.png'),
+    icon: windowIcon(),
     backgroundColor: THEMES.daca.background,
     titleBarStyle: 'hidden',
     ...(isMac ? { trafficLightPosition: { x: 12, y: 11 } } : { titleBarOverlay: THEMES.daca.overlay }),

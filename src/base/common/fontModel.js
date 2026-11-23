@@ -267,6 +267,16 @@ export function kerningGroupOf(font, name, side) {
   return null;
 }
 
+/**
+ * The pair to write when the kerning between two glyphs is changed: the one that applies now (glyph or
+ * group on each side); when none does, the pair between their groups, or between the glyphs that have no group.
+ */
+export function kerningPairFor(font, left, right) {
+  const gl = kerningGroupOf(font, left, 1); const gr = kerningGroupOf(font, right, 2);
+  const has = (l, r) => l && r && font.kerning[l] && typeof font.kerning[l][r] === 'number';
+  return [[left, right], [left, gr], [gl, right], [gl, gr]].find(([l, r]) => has(l, r)) || [gl || left, gr || right];
+}
+
 /** Suggests the glyph name for a character: AGL-style names for letters and digits, "uniXXXX" otherwise. */
 const DIGITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 export function suggestGlyphName(code) {

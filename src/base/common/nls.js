@@ -28,8 +28,10 @@ export function negotiateLocale(requested, supported = locales.map((l) => l.id))
     const exact = supported.find((s) => s.toLowerCase() === tag);
     if (exact) return exact;
     const [lang, region] = tag.split(/[-_]/);
-    if (lang === 'pt') return 'pt-BR'; // the only Portuguese catalog so far
-    const base = supported.find((s) => s.toLowerCase() === lang);
+    // Portuguese: Brazil (and a bare "pt") gets pt-BR; every other region follows the European norm.
+    if (lang === 'pt') return region && region !== 'br' ? 'pt-PT' : 'pt-BR';
+    // "de-AT" → de, "it-CH" → it (the first catalog of that language)
+    const base = supported.find((s) => s.toLowerCase() === lang) || supported.find((s) => s.toLowerCase().split('-')[0] === lang);
     if (base) return base;
   }
   return 'en';
@@ -39,8 +41,9 @@ export function negotiateLocale(requested, supported = locales.map((l) => l.id))
 export async function initNls(baseUrl) {
   locales = await (await fetch(new URL('locales.json', baseUrl))).json();
   const pref = getLocalePreference();
-  locale = pref === 'auto' ? negotiateLocale(navigator.languages?.length ? navigator.languages : [navigator.language]) : pref;
-  if (!locales.some((l) => l.id === locale)) locale = 'en';
+  const system = () => negotiateLocale(navigator.languages?.length ? navigator.languages : [navigator.language]);
+  // a language chosen in an earlier version that is no longer offered: back to the system's
+  locale = pref !== 'auto' && locales.some((l) => l.id === pref) ? pref : system();
   const load = async (id) => (await fetch(new URL(`${id}.json`, baseUrl))).json();
   [fallback, messages] = await Promise.all([load('en'), locale === 'en' ? Promise.resolve(null) : load(locale)]);
   messages = messages || fallback;

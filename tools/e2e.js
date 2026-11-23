@@ -772,6 +772,276 @@ app.whenReady().then(async () => {
     check('the scale tool (S) scales from the centre, and Ctrl+Shift+B hides the box',
       scaleTool === 'scale' && Math.abs(size2[0] / size0[0] - 2) < 0.08 && size2[1] === size0[1] && hidden === '' && (await sizeOf()).join() === size0.join(), `${size0} → ${size2} · ${scaleTool} · "${hidden}"`);
 
+    // ---- a line of text in the Glyph view, as in other font editors: the text tool, spacing and kerning from the keyboard
+    const line = () => js(`const c = document.querySelector(".glyph-canvas"); return { text: c.dataset.text, active: Number(c.dataset.active), caret: Number(c.dataset.caret), tool: c.dataset.tool,
+      boxes: (c.dataset.boxes || "").split(",").map((b) => b ? b.split(":").map(Number) : null), title: document.querySelector(".glyph-title-name")?.textContent }`);
+    const field = (id) => js(`return Number(document.querySelector('.glyph-panel [data-field="${id}"]')?.value)`);
+    const dblClickAt = async (x, y) => {
+      for (const clickCount of [1, 2]) {
+        wc.sendInputEvent({ type: 'mouseDown', x: Math.round(x), y: Math.round(y), button: 'left', clickCount }); await sleep(30);
+        wc.sendInputEvent({ type: 'mouseUp', x: Math.round(x), y: Math.round(y), button: 'left', clickCount }); await sleep(30);
+      }
+      await settle();
+    };
+    const start = await line();
+    const startGlyph = start.title;
+    await setValue('[data-field="text"]', 'AVO', 'input');
+    await settle();
+    const typedInField = await line();
+    await canvasKey('t');
+    await canvasKey('ArrowRight');
+    await settle();
+    const onV = await line();
+    check('the text field puts a line of glyphs in the Glyph view; T and the arrows move the cursor, and the glyph after it is edited',
+      typedInField.text === 'AVO' && typedInField.active === 0 && typedInField.boxes.filter(Boolean).length === 3 && onV.tool === 'text' && onV.caret === 1 && onV.active === 1 && onV.title === 'V',
+      JSON.stringify({ startGlyph, typedInField, onV }));
+    const kern0 = await field('kernPrev');
+    await canvasKey('ArrowLeft', { ctrlKey: true, altKey: true });
+    await canvasKey('ArrowLeft', { ctrlKey: true, altKey: true, shiftKey: true });
+    await settle();
+    const kern1 = await field('kernPrev');
+    const lsb0 = await field('lsb'); const rsb0 = await field('rsb');
+    await canvasKey('ArrowLeft', { altKey: true });
+    await canvasKey('ArrowRight', { ctrlKey: true, shiftKey: true });
+    await settle();
+    const lsb1 = await field('lsb'); const rsb1 = await field('rsb');
+    await shot('24-text-tool-daca');
+    for (let i = 0; i < 4; i++) await key('z', { ctrlKey: true });
+    await settle();
+    check('Ctrl+Alt + ← → change the kerning with the glyph before the cursor, Alt and Ctrl + ← → the side bearings (Shift: 10), and all of it is undone',
+      kern1 === kern0 - 11 && lsb1 === lsb0 + 1 && rsb1 === rsb0 + 10 && (await field('kernPrev')) === kern0 && (await field('lsb')) === lsb0 && (await field('rsb')) === rsb0,
+      JSON.stringify({ kern0, kern1, lsb0, lsb1, rsb0, rsb1 }));
+    await canvasKey('n');
+    await settle();
+    const typed = await line();
+    await canvasKey('?');
+    await settle();
+    const question = { text: (await line()).text, dialog: await js('return !!document.querySelector(".cm-overlay")') };
+    await canvasKey('Backspace'); await canvasKey('Backspace');
+    await settle();
+    const erased = await line();
+    check('typing with the text tool puts glyphs at the cursor (keys like ? and [ type, they are not shortcuts here) and Backspace takes them out',
+      typed.text === 'AnVO' && typed.caret === 2 && typed.title === 'V' && question.text === 'An?VO' && !question.dialog && erased.text === 'AVO' && erased.caret === 1,
+      JSON.stringify({ typed, question, erased: erased.text }));
+    await canvasKey('Escape');
+    await settle();
+    const afterEsc = await line();
+    const aBox = afterEsc.boxes[0];
+    await dblClickAt(canvasAt.x + (aBox[0] + aBox[1]) / 2, canvasAt.y + aBox[2] - 30);
+    const onA = await line();
+    await key(']');
+    await settle();
+    const swapped = await line();
+    await key('[');
+    await settle();
+    check('Esc edits the glyph after the cursor; a double-click edits another glyph of the line; ] and [ swap only the glyph being edited',
+      afterEsc.tool === 'select' && afterEsc.title === 'V' && onA.active === 0 && onA.title === 'A' && swapped.text === 'BVO' && swapped.title === 'B' && (await line()).text === 'AVO',
+      JSON.stringify({ afterEsc, onA, swapped: swapped.text }));
+    await setValue('[data-field="text"]', 'A/V /zz€', 'input');
+    await settle();
+    const named = await line();
+    await setValue('[data-field="samples"]', 'kerning');
+    await settle();
+    const sample = await line();
+    await shot('25-text-kerning-daca');
+    check('the text field takes /name for a glyph by its name, shows characters the font lacks as empty boxes, and offers the samples of the proof',
+      named.text === 'AV/zz€' && named.boxes.filter(Boolean).length === 4 && /^AVATAR/.test(sample.text) && sample.boxes.filter(Boolean).length > 20,
+      JSON.stringify({ named: named.text, sample: sample.text.slice(0, 30) }));
+    await setValue('[data-field="text"]', start.text, 'input');
+    await canvasKey('v');
+    await settle();
+
+    // ---- the masters side by side: the glyph in every master, the compatibility map, points added where one lacks them, the line between the masters
+    const cds = (k) => js(`return document.querySelector(".glyph-canvas").dataset.${k} ?? ""`);
+    const altClickAt = async (x, y) => {
+      for (const type of ['mouseMove', 'mouseDown', 'mouseUp']) { wc.sendInputEvent({ type, x: Math.round(x), y: Math.round(y), button: 'left', clickCount: 1, modifiers: ['alt'] }); await sleep(40); }
+    };
+    await setValue('[data-field="text"]', 'I', 'input');
+    await canvasKey('v');
+    await settle();
+    await click('[data-toggle="masters"]');
+    await settle();
+    const masterRow = { masters: await cds('masters'), boxes: (await cds('masterBoxes')).split(',').map((b) => b.split(':')) };
+    const boldBox = masterRow.boxes.find((b) => b[0] === 'bold').slice(1).map(Number);
+    await dblClickAt(canvasAt.x + (boldBox[0] + boldBox[1]) / 2, canvasAt.y + (boldBox[2] + boldBox[3]) / 2);
+    const switched = await style();
+    await shot('26-masters-row-daca');
+    const regularBox = (await cds('masterBoxes')).split(',').map((b) => b.split(':')).find((b) => b[0] === 'regular').slice(1).map(Number);
+    await dblClickAt(canvasAt.x + (regularBox[0] + regularBox[1]) / 2, canvasAt.y + (regularBox[2] + regularBox[3]) / 2);
+    check('All masters shows the glyph in every master under the line; a double-click on one works in that master',
+      masterRow.masters === 'regular:1,bold:1,italic:1' && masterRow.boxes.length === 3 && /^Bold/.test(switched) && /^Regular/.test(await style()), JSON.stringify({ masterRow, switched }));
+    await click('[data-toggle="compat"]');
+    await settle();
+    const matchedAll = await cds('unmatched');
+    await canvasKey('a', { ctrlKey: true });
+    await settle();
+    const iBox = await boxOf(); // 10 pixels outside the points
+    await canvasKey('Escape');
+    await canvasKey('+');
+    await altClickAt(canvasAt.x + (iBox[0] + iBox[2]) / 2, canvasAt.y + iBox[3] - 10);
+    await settle();
+    const counts = () => cds('masterPoints');
+    const afterAlt = { counts: await counts(), masters: await cds('masters') };
+    await clickAt(canvasAt.x + iBox[0] + 10, canvasAt.y + (iBox[1] + iBox[3]) / 2);
+    await settle();
+    const afterPlain = { counts: await counts(), masters: await cds('masters'), unmatched: Number(await cds('unmatched')) };
+    await shot('27-compatibility-daca');
+    await clearToasts();
+    await click('.weight-row[data-weight="bold"] [data-action="addPoints"]');
+    await settle();
+    const afterAdd = { counts: await counts(), masters: await cds('masters'), unmatched: await cds('unmatched'), toast: await toasts() };
+    check('Alt with the add-point tool adds the point in every master; without it only here, and the compatibility map marks what the other master lacks',
+      matchedAll === '0' && afterAlt.counts === '5/5/5' && afterAlt.masters === 'regular:1,bold:1,italic:1' && afterPlain.counts === '6/5/5' && afterPlain.masters === 'regular:1,bold:0,italic:1' && afterPlain.unmatched > 0,
+      JSON.stringify({ matchedAll, afterAlt, afterPlain }));
+    check('Add missing points gives the other master the point it lacks, and the two are compatible again',
+      afterAdd.counts === '6/6/5' && afterAdd.masters === 'regular:1,bold:1,italic:1' && afterAdd.unmatched === '0' && /1 point added/.test(afterAdd.toast), JSON.stringify(afterAdd));
+    await clearToasts();
+    await setValue('[data-field="text"]', 'HIOI', 'input');
+    await canvasKey('v');
+    await click('[data-toggle="preview"]');
+    await settle();
+    const preview = () => js(`const p = document.querySelector(".glyph-preview"); const c = p.querySelector("canvas");
+      return { hidden: p.hidden, at: c.dataset.at, label: p.querySelector(".glyph-preview-label").textContent, min: p.querySelector("input").min, max: p.querySelector("input").max }`);
+    const preview0 = await preview();
+    await setValue('[data-field="previewAt"]', '650', 'input');
+    await settle();
+    const preview1 = await preview();
+    await shot('28-preview-daca');
+    check('Preview shows the line at any point between the masters, starting at a style of the family',
+      !preview0.hidden && preview0.min === '400' && preview0.max === '700' && /Medium|SemiBold/.test(preview0.label) && preview1.at === '650' && /650/.test(preview1.label), JSON.stringify({ preview0, preview1 }));
+    for (let i = 0; i < 3; i++) await key('z', { ctrlKey: true });
+    await settle();
+    const undone4 = await counts();
+    for (const tg of ['preview', 'compat', 'masters']) await click(`[data-toggle="${tg}"]`);
+    await setValue('[data-field="text"]', start.text, 'input');
+    await canvasKey('v');
+    await settle();
+    check('undo takes the points out of every master again', undone4 === '4/4/4' && (await js('return document.querySelector(".glyph-preview").hidden')), undone4);
+
+    // ---- drawing tools: rectangle and ellipse (F), remove overlap (Ctrl+Shift+O), the knife (E), extremes
+    await setValue('[data-field="text"]', 'I', 'input');
+    await canvasKey('v');
+    await canvasKey('0');
+    await settle();
+    await canvasKey('a', { ctrlKey: true });
+    await settle();
+    const iRect = await boxOf(); // 10 pixels outside the points
+    await canvasKey('Escape');
+    const iMidY = canvasAt.y + (iRect[1] + iRect[3]) / 2;
+    const iMidX = canvasAt.x + (iRect[0] + iRect[2]) / 2;
+    const outline0 = (await outline()).join();
+    await canvasKey('f');
+    const shapeTool = { tool: await cds('tool'), kind: await js('return document.querySelector(\'button[data-tool="shape"]\').dataset.kind') };
+    await dragTo(iMidX - 120, iMidY - 25, iMidX + 120, iMidY + 25);
+    await settle();
+    const withBar = (await outline()).join();
+    await shot('29-shape-tool-daca');
+    await canvasKey('o', { ctrlKey: true, shiftKey: true });
+    await settle();
+    const merged = { outline: (await outline()).join(), toast: await toasts() };
+    await clearToasts();
+    check('F draws a rectangle by dragging; Ctrl+Shift+O joins it with the stem it overlaps into one contour',
+      shapeTool.tool === 'shape' && shapeTool.kind === 'rect' && outline0 === '1,4,0' && withBar === '2,8,0' && merged.outline === '1,12,0' && /1 contour/.test(merged.toast),
+      JSON.stringify({ shapeTool, outline0, withBar, merged }));
+    await key('z', { ctrlKey: true });
+    await settle();
+    await canvasKey('e');
+    await dragTo(iMidX + 60, iMidY + 120, iMidX + 60, iMidY - 120);
+    await settle();
+    const cutOutline = (await outline()).join();
+    await shot('30-knife-daca');
+    check('the knife (E) cuts the bar it is dragged across in two closed parts', (await cds('tool')) === 'knife' && cutOutline === '3,12,0', cutOutline);
+    await key('z', { ctrlKey: true }); await key('z', { ctrlKey: true });
+    await settle();
+    await canvasKey('f'); await canvasKey('f');
+    const kindNow = await js('return document.querySelector(\'button[data-tool="shape"]\').dataset.kind');
+    await dragTo(iMidX - 60, iMidY + 160, iMidX + 60, iMidY + 60);
+    await settle();
+    const withEllipse = (await outline()).join();
+    await clearToasts();
+    await click('[data-action="addExtremes"]');
+    const extremesToast = await toasts();
+    await clearToasts();
+    await key('z', { ctrlKey: true });
+    await canvasKey('v');
+    await setValue('[data-field="text"]', start.text, 'input');
+    await settle();
+    check('F again draws an ellipse, which already has its extremes; undo takes everything back',
+      kindNow === 'ellipse' && withEllipse === '2,8,8' && /already/.test(extremesToast), JSON.stringify({ kindNow, withEllipse, extremesToast }));
+
+    {
+    // ---- ruler (L), rotate (R), background, align (Ctrl+Shift+A), Tab, lasso (Alt + drag)
+    await setValue('[data-field="text"]', 'I', 'input');
+    await canvasKey('v'); await canvasKey('0');
+    await settle();
+    await canvasKey('a', { ctrlKey: true });
+    await settle();
+    const jBox = await boxOf();
+    await canvasKey('Escape');
+    const jx = canvasAt.x + (jBox[0] + jBox[2]) / 2; const jy = canvasAt.y + (jBox[1] + jBox[3]) / 2;
+    await canvasKey('l');
+    await dragTo(jx - 90, jy, jx + 90, jy);
+    await settle();
+    const ruler = (await cds('ruler')).split('|');
+    await shot('31-ruler-daca');
+    check('the ruler (L) shows its length and the thickness of the stem it crosses', (await cds('tool')) === 'ruler' && ruler[1].split(',').map(Number).includes(84), ruler.join('|'));
+    await canvasKey('v');
+    await canvasKey('a', { ctrlKey: true });
+    await settle();
+    const size0r = await sizeOf();
+    await canvasKey('r');
+    await dragTo(jx + 120, jy, jx, jy - 120);
+    await settle();
+    const turned = await sizeOf();
+    await key('z', { ctrlKey: true });
+    await settle();
+    check('the rotate tool (R) turns the selection around its centre (Shift: steps of 15°)', size0r.join() === '84,700' && Math.abs(turned[0] - 700) <= 2 && Math.abs(turned[1] - 84) <= 2 && (await sizeOf()).join() === '84,700', `${size0r} → ${turned}`);
+    await canvasKey('v');
+    await canvasKey('Escape');
+    await click('[data-action="toBackground"]');
+    await settle();
+    const bg = { count: await cds('background'), pressed: await js('return document.querySelector(\'[data-toggle="background"]\').getAttribute("aria-pressed")') };
+    await click('[data-action="swapBackground"]');
+    await settle();
+    const bgSwapped = { outline: (await outline()).join(), count: await cds('background') };
+    await shot('32-background-daca');
+    await key('z', { ctrlKey: true }); await key('z', { ctrlKey: true });
+    await settle();
+    check('Copy to background keeps the drawing behind it, shown at once; Swap brings it to the front', bg.count === '1' && bg.pressed === 'true' && bgSwapped.outline === '1,4,0' && bgSwapped.count === '1' && (await cds('background')) === '', JSON.stringify({ bg, bgSwapped }));
+    await click('[data-toggle="background"]');
+    await canvasKey('Tab');
+    await settle();
+    const p1 = [await field('px'), await field('py')];
+    await canvasKey('Tab');
+    await settle();
+    const p2 = [await field('px'), await field('py')];
+    await canvasKey('Tab', { shiftKey: true });
+    await settle();
+    const p3 = [await field('px'), await field('py')];
+    check('Tab and Shift+Tab go from point to point of the contour', p1.join() === '74,0' && p2.join() === '158,0' && p3.join() === '74,0', JSON.stringify({ p1, p2, p3 }));
+    await canvasKey('a', { ctrlKey: true });
+    await canvasKey('a', { ctrlKey: true, shiftKey: true });
+    await settle();
+    const aligned = await sizeOf();
+    await key('z', { ctrlKey: true });
+    await canvasKey('Escape');
+    await settle();
+    // a lasso around the two top points: Alt + drag from an empty place
+    const top = jBox[1] + 10; const left = jBox[0] + 10; const right = jBox[2] - 10;
+    const lassoPath = [[left - 30, top - 30], [right + 30, top - 30], [right + 30, top + 30], [left - 30, top + 30], [left - 30, top - 25]].map(([x, y]) => [canvasAt.x + x, canvasAt.y + y]);
+    wc.sendInputEvent({ type: 'mouseMove', x: Math.round(lassoPath[0][0]), y: Math.round(lassoPath[0][1]), modifiers: ['alt'] }); await sleep(40);
+    wc.sendInputEvent({ type: 'mouseDown', x: Math.round(lassoPath[0][0]), y: Math.round(lassoPath[0][1]), button: 'left', clickCount: 1, modifiers: ['alt'] }); await sleep(40);
+    for (const [x, y] of lassoPath.slice(1)) { wc.sendInputEvent({ type: 'mouseMove', x: Math.round(x), y: Math.round(y), button: 'left', modifiers: ['alt', 'leftButtonDown'] }); await sleep(40); }
+    wc.sendInputEvent({ type: 'mouseUp', x: Math.round(lassoPath[4][0]), y: Math.round(lassoPath[4][1]), button: 'left', clickCount: 1, modifiers: ['alt'] }); await sleep(60);
+    await settle();
+    const lassoBox = await boxOf();
+    const lassoed = [Math.round((lassoBox[2] - lassoBox[0] - 20) / (jBox[2] - jBox[0] - 20) * 84), lassoBox[3] - lassoBox[1] - 20];
+    await canvasKey('Escape');
+    await setValue('[data-field="text"]', start.text, 'input');
+    await settle();
+    check('Ctrl+Shift+A puts the selected points on one line; Alt + drag draws a lasso around the points to take', aligned[0] === 0 && aligned[1] === 700 && lassoed.join() === '84,0', JSON.stringify({ aligned, lassoed }));
+    }
+
     // copy and paste between glyphs
     const oOutline = (await outline()).join();
     await canvasKey('c', { ctrlKey: true });
@@ -872,6 +1142,41 @@ app.whenReady().then(async () => {
     }
     await menu('.status-theme', /Amsterd/);
     await settle();
+
+    // ---- every other language: the catalog loads, the views have names, nothing is cut off
+    const overflowing = {};
+    for (const id of ['pt-PT', 'es', 'fr', 'de', 'it']) {
+      await js(`const s = document.querySelector(".status-select"); s.value = ${JSON.stringify(id)}; s.dispatchEvent(new Event("change"));`);
+      await sleep(600);
+      await ready();
+      await settle();
+      await js('window.dispatchEvent(new KeyboardEvent("keydown", { key: "2", ctrlKey: true }))');
+      await settle();
+      const state = await js(`
+        const cut = (el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow !== 'visible';
+        return {
+          lang: document.documentElement.lang,
+          tabs: [...document.querySelectorAll('.tab-label')].map((x) => x.textContent.trim()),
+          picker: document.querySelector('.status-select').selectedOptions[0]?.textContent,
+          tabsWidth: [document.querySelector('.tabs').scrollWidth, document.querySelector('.tabs').clientWidth, document.querySelector('.editor-header').clientWidth],
+          raw: [...document.querySelectorAll('button, label, .tab-label, h2, h3')].filter((el) => /^[a-z]+(\\.[A-Za-z0-9]+)+$/.test(el.textContent.trim())).map((el) => el.textContent.trim()),
+          cut: [...document.querySelectorAll('.tab-label, .activity-item, .statusbar *, .glyph-tools button, .view-toolbar button')].filter((el) => el.children.length === 0 && el.textContent.trim() && cut(el)).map((el) => el.textContent.trim()),
+        }`);
+      overflowing[id] = state.cut.concat(state.tabsWidth[0] > state.tabsWidth[1] + 1 ? [`tab bar ${state.tabsWidth}`] : []);
+      check(`the interface switches to ${id}`, state.lang === id && state.tabs.length === 9 && state.tabs.every((x) => x) && new Set(state.tabs).size === 9 && state.raw.length === 0, JSON.stringify(state));
+      await shot(`20-glyph-${id}`);
+      if (id === 'de' || id === 'fr') {
+        await js('window.dispatchEvent(new KeyboardEvent("keydown", { key: "5", ctrlKey: true }))');
+        await settle();
+        await shot(`21-family-${id}`);
+        await js('window.dispatchEvent(new KeyboardEvent("keydown", { key: "e", ctrlKey: true }))');
+        await settle();
+        await shot(`22-export-${id}`);
+        await js('window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))');
+        await settle();
+      }
+    }
+    check('no label of the tabs, tools or status bar is cut off in any language', Object.values(overflowing).every((list) => list.length === 0), JSON.stringify(overflowing));
 
     // ---- Portuguese: the window reloads and the project comes back
     await js('const s = document.querySelector(".status-select"); s.value = "pt-BR"; s.dispatchEvent(new Event("change"));');

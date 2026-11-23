@@ -158,6 +158,19 @@ function readUfo(dir) {
 
   const glyphs = readLayer(glyphDir, warnings);
 
+  // The background of each glyph (a layer of its own: "public.background" for the default layer,
+  // "<layer>.background" for the layer of another weight): kept on the glyph as { contours, components }.
+  const readBackground = (layerName, target) => {
+    const bg = layers.find((l) => l.name === (layerName === 'public.default' ? 'public.background' : `${layerName}.background`));
+    if (!bg) return;
+    const bgDir = path.join(dir, bg.folder);
+    if (path.dirname(bgDir) !== dir || !fs.existsSync(bgDir)) return;
+    for (const [name, g] of Object.entries(readLayer(bgDir, warnings))) {
+      if (target[name] && (g.contours.length || g.components.length)) target[name].background = { contours: g.contours, components: g.components };
+    }
+  };
+  readBackground('public.default', glyphs);
+
   const lib = readPlist(dir, 'lib.plist', {});
   const listed = Array.isArray(lib['public.glyphOrder']) ? lib['public.glyphOrder'].filter((n) => n in glyphs) : [];
   const seen = new Set(listed);
@@ -189,8 +202,10 @@ function readUfo(dir) {
       // every weight has every glyph: one that is missing starts as a copy of the first weight's
       for (const name of glyphOrder) {
         all[name] = own[name] || JSON.parse(JSON.stringify(glyphs[name]));
+        if (!own[name]) delete all[name].background; // a copy does not take the other weight's background
         all[name].unicodes = [...glyphs[name].unicodes];
       }
+      readBackground(w.layer, all);
       weights.push({ id: w.id, name: w.name, location: num(w.location, 400), ...slant(w), layer: w.layer, glyphs: all, kerning: w.kerning && typeof w.kerning === 'object' ? w.kerning : {} });
     }
     if (weights.length < 2) weights = undefined;

@@ -14,6 +14,7 @@ import { buildLayout, generateFeatureCode } from '../../../../base/common/featur
 import { designspaceXml } from '../../../../base/common/interpolate.js';
 import * as weights from '../../../../base/common/weights.js';
 import { compileTtf, postscriptName } from '../../../../base/common/ttfWriter.js';
+import { fontWithoutOverlaps } from '../../../../base/common/pathBoolean.js';
 import { t, tn } from '../../../../base/common/nls.js';
 import { baseName } from '../../../../base/common/format.js';
 import { confirmDialog } from '../../../browser/dialogs.js';
@@ -399,10 +400,10 @@ export class FontService {
   }
 
   /** @param {'ttf'|'woff2'} format */
-  async exportFont(format, font = this.exportable) {
+  async exportFont(format, font = this.exportable, { removeOverlaps = false } = {}) {
     if (!font) return false;
     let result;
-    try { result = this.compile(font); } catch (err) { this.notifications.warn(t('export.error', { detail: String(err && err.message) })); return false; }
+    try { result = this.compile(removeOverlaps ? fontWithoutOverlaps(font) : font); } catch (err) { this.notifications.warn(t('export.error', { detail: String(err && err.message) })); return false; }
     const res = await this.host.project.exportFile({ kind: format, name: postscriptName(font.info), data: result.bytes }).catch((err) => ({ error: 'writeFailed', detail: String(err && err.message) }));
     return this.#reportExport(res, result.warnings.length ? tn('export.warnings', result.warnings.length) : '');
   }
@@ -412,7 +413,7 @@ export class FontService {
    * between them — into a new folder: one font per style and format, and a style sheet for the web.
    * @param {{ ttf?: boolean, woff2?: boolean }} formats
    */
-  async exportFamily(formats = { ttf: true, woff2: true }, onlyActive = false) {
+  async exportFamily(formats = { ttf: true, woff2: true }, onlyActive = false, { removeOverlaps = false } = {}) {
     if (!this.font) return false;
     if (this.#pending) this.commit();
     const all = weights.familyStyles(this.font);
@@ -422,7 +423,7 @@ export class FontService {
     const family = this.familyName;
     for (const style of styles) {
       let result;
-      try { result = compileTtf(style.font); } catch (err) { this.notifications.warn(t('export.error', { detail: `${style.name}: ${String(err && err.message)}` })); return false; }
+      try { result = compileTtf(removeOverlaps ? fontWithoutOverlaps(style.font) : style.font); } catch (err) { this.notifications.warn(t('export.error', { detail: `${style.name}: ${String(err && err.message)}` })); return false; }
       warned += result.warnings.length; skipped += style.skipped.length;
       const name = postscriptName(style.font.info);
       if (formats.ttf) files.push({ name, kind: 'ttf', data: result.bytes });
@@ -660,9 +661,17 @@ export class FontService {
     this.#onDidChangeFilter.fire(this.filter);
   }
 
-  select(name) {
+  /**
+   * Why the selection changed last: "step" (previous or next glyph of the font: the Glyph view swaps only
+   * the glyph being edited in its line of text), "text" (the Glyph view picked another glyph of its line),
+   * or "select" (anything else: the line starts again with that glyph).
+   */
+  selectionCause = 'select';
+
+  select(name, cause = 'select') {
     if (!this.font || !(name in this.font.glyphs) || name === this.selected) return;
     this.selected = name;
+    this.selectionCause = cause;
     this.#onDidChangeSelection.fire(name);
   }
 
@@ -671,6 +680,6 @@ export class FontService {
     const list = this.visibleGlyphs();
     if (!list.length) return;
     const i = list.indexOf(this.selected);
-    this.select(list[(Math.max(0, i) + delta + list.length) % list.length]);
+    this.select(list[(Math.max(0, i) + delta + list.length) % list.length], 'step');
   }
 }

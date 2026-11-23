@@ -26,12 +26,14 @@ export async function showExportDialog({ fonts }) {
       ] },
       { id: 'ttf', label: t('export.ttf'), type: 'checkbox', value: true },
       { id: 'woff2', label: t('export.woff2'), type: 'checkbox', value: many },
+      { id: 'removeOverlaps', label: t('export.removeOverlaps'), type: 'checkbox', value: false },
     ],
     validate: (v) => ((v.what === 'style' || v.what === 'family') && !v.ttf && !v.woff2 ? t('exportDialog.noFormat') : null),
   });
   if (!res) return;
   if (res.what === 'fea') { await fonts.exportFeatureCode(); return; }
   if (res.what === 'designspace') { await fonts.exportDesignspace(); return; }
-  if (res.what === 'style' && res.ttf !== res.woff2) { await fonts.exportFont(res.ttf ? 'ttf' : 'woff2'); return; }
-  await fonts.exportFamily({ ttf: res.ttf, woff2: res.woff2 }, res.what === 'style');
+  const opts = { removeOverlaps: !!res.removeOverlaps };
+  if (res.what === 'style' && res.ttf !== res.woff2) { await fonts.exportFont(res.ttf ? 'ttf' : 'woff2', undefined, opts); return; }
+  await fonts.exportFamily({ ttf: res.ttf, woff2: res.woff2 }, res.what === 'style', opts);
 }

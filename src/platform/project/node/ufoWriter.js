@@ -137,6 +137,34 @@ function writeUfo(dir, font, { glyphs = 'all' } = {}) {
   const stats = { written: 0, removed: 0 };
   writeLayer(path.join(dir, 'glyphs'), font.glyphOrder, first.glyphs, glyphs, stats);
 
+  // the backgrounds of the glyphs: a layer next to the layer of each weight, only while there is one
+  const writeBackground = (layerName, glyphMap) => {
+    const name = layerName === 'public.default' ? 'public.background' : `${layerName}.background`;
+    const bg = {};
+    for (const g of font.glyphOrder) {
+      const back = glyphMap[g] && glyphMap[g].background;
+      if (back && ((back.contours || []).length || (back.components || []).length)) {
+        bg[g] = { name: g, width: glyphMap[g].width, unicodes: [], contours: back.contours || [], components: back.components || [], anchors: [] };
+      }
+    }
+    let entry = layers.find((l) => l[0] === name);
+    if (!Object.keys(bg).length) {
+      if (entry && entry[1] !== 'glyphs' && path.basename(entry[1]) === entry[1] && /^glyphs\./.test(entry[1])) {
+        fs.rmSync(path.join(dir, entry[1]), { recursive: true, force: true });
+        layers.splice(layers.indexOf(entry), 1);
+      }
+      return;
+    }
+    if (!entry) {
+      const folders = new Set(layers.map((l) => String(l[1]).toLowerCase()));
+      entry = [name, `glyphs.${glyphFileName(name, folders).replace(/\.glif$/, '')}`];
+      layers.push(entry);
+    }
+    if (path.basename(entry[1]) !== entry[1] || !/^glyphs\./.test(entry[1])) throw new Error(`invalid layer folder: ${entry[1]}`);
+    writeLayer(path.join(dir, entry[1]), font.glyphOrder, bg, 'all', stats);
+  };
+  writeBackground('public.default', first.glyphs);
+
   const kept = new Set();
   for (const w of weights.slice(1)) {
     const name = w.layer || w.name;
@@ -150,10 +178,11 @@ function writeUfo(dir, font, { glyphs = 'all' } = {}) {
     if (path.basename(entry[1]) !== entry[1] || !/^glyphs\./.test(entry[1])) throw new Error(`invalid layer folder: ${entry[1]}`);
     kept.add(name);
     writeLayer(path.join(dir, entry[1]), font.glyphOrder, dataOf(w).glyphs, 'all', stats);
+    writeBackground(name, dataOf(w).glyphs);
   }
   // layers of weights that were removed from the project go away with them
-  for (const name of previousLayers) {
-    if (kept.has(name)) continue;
+  for (const name of [...previousLayers, ...previousLayers.map((n) => `${n}.background`)]) {
+    if (kept.has(name) || kept.has(name.replace(/\.background$/, ''))) continue;
     const i = layers.findIndex((l) => l[0] === name);
     if (i < 0 || layers[i][1] === 'glyphs' || path.basename(layers[i][1]) !== layers[i][1]) continue;
     fs.rmSync(path.join(dir, layers[i][1]), { recursive: true, force: true });

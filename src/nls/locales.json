@@ -1,4 +1,9 @@
 [
   { "id": "en", "label": "English" },
-  { "id": "pt-BR", "label": "Português (Brasil)" }
+  { "id": "pt-BR", "label": "Português (Brasil)" },
+  { "id": "pt-PT", "label": "Português (Portugal)" },
+  { "id": "es", "label": "Español" },
+  { "id": "fr", "label": "Français" },
+  { "id": "de", "label": "Deutsch" },
+  { "id": "it", "label": "Italiano" }
 ]

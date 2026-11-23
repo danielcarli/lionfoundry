@@ -39,6 +39,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y rpm
       - name: Build
         run: npx --yes electron-builder@26.18.0 ${{ matrix.target }} --publish never
+      # Reads the packaged LionFoundry.exe and says whether it carries the icon the Start menu and the task bar
+      # show. A missing icon is reported as an error on the run page, but does not hold the release back.
+      - name: The Windows app carries its icon
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: bash
+        run: node tools/check-win-icon.js dist/win-unpacked/LionFoundry.exe build/icon.ico || { echo "::error title=Windows icon::LionFoundry.exe was packaged without the app icon (see the output of this step)"; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.name }}

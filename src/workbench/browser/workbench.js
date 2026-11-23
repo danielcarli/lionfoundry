@@ -123,9 +123,10 @@ window.addEventListener('keydown', (e) => {
   }
   else if (mod && /^[1-9]$/.test(e.key) && VIEWS[+e.key - 1]) { e.preventDefault(); layout.openView(VIEWS[+e.key - 1].id); }
   else if (!typing && !mod && fonts.hasFont && layout.activeView === 'glyph') {
-    // [ and ] as in other font editors; the arrows too, while nothing is selected
-    if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === '[') { e.preventDefault(); fonts.step(-1); }
-    else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ']') { e.preventDefault(); fonts.step(1); }
+    // [ and ] as in other font editors; the arrows too, while nothing is selected;
+    // Home and End as in Glyphs; in a line of text only the glyph being edited changes
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === '[' || e.key === 'Home') { e.preventDefault(); fonts.step(-1); }
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ']' || e.key === 'End') { e.preventDefault(); fonts.step(1); }
   }
 });
 

@@ -679,6 +679,201 @@ const add = (font, glyph) => { font.glyphs[glyph.name] = glyph; font.glyphOrder.
     assert.strictEqual(replies.get(7).error.code, -32601);
   });
 
+  await test('line of text of the Glyph view: reading, writing, layout and the glyph at the cursor', async () => {
+    const { parseText, serializeText, layoutText, glyphAtCaret } = await import('../src/base/common/editText.js');
+    const glyphs = { n: [0x6E], o: [0x6F], slash: [0x2F], space: [0x20], 'a.sc': [], 'f_i': [] };
+    const font = {
+      hasGlyph: (n) => n in glyphs,
+      glyphForChar: (c) => Object.keys(glyphs).find((n) => glyphs[n].includes(c)) || null,
+      unicodesOf: (n) => glyphs[n] || [],
+    };
+    const items = parseText('no/a.sc n\n/f_i/zz x/', font);
+    assert.deepStrictEqual(items, [{ name: 'n' }, { name: 'o' }, { name: 'a.sc' }, { name: 'n' }, { br: true }, { name: 'f_i' }, { missing: '/zz' }, { missing: 'x' }, { name: 'slash' }], 'the space after a name ends it');
+    // written back the same way, and read again to the same items
+    const text = serializeText(items, font);
+    assert.strictEqual(text, 'no/a.sc n\n/f_i/zz x/slash');
+    assert.deepStrictEqual(parseText(text, font), items);
+    const widths = { n: 500, o: 520, 'a.sc': 400, f_i: 560, space: 250, slash: 300 };
+    const L = layoutText(items, { advance: (n) => widths[n], kern: (a, b) => (a === 'n' && b === 'o' ? -20 : 0), lineHeight: 1200, missingWidth: 500 });
+    assert.strictEqual(L.lines, 2);
+    assert.deepStrictEqual([L.boxes[0].x, L.boxes[1].x, L.boxes[1].kern, L.boxes[2].x, L.boxes[3].x], [0, 480, -20, 1000, 1400]);
+    assert.strictEqual(L.boxes[4], null, 'a line break has no box');
+    assert.deepStrictEqual([L.boxes[5].x, L.boxes[5].y], [0, -1200], 'the second line starts again at the left, one line lower');
+    assert.strictEqual(L.carets.length, items.length + 1);
+    assert.deepStrictEqual(L.carets[4], { x: 1900, y: 0, line: 0 }, 'the cursor before the line break is at the end of the first line');
+    assert.strictEqual(glyphAtCaret(items, 0), 0);
+    assert.strictEqual(glyphAtCaret(items, 4), 3, 'at the end of a line, the glyph before the cursor');
+    assert.strictEqual(glyphAtCaret(items, 8), 8);
+    assert.strictEqual(glyphAtCaret(items, 7), -1, 'no glyph next to a missing character');
+    assert.deepStrictEqual(parseText('n o', font), [{ name: 'n' }, { name: 'space' }, { name: 'o' }], 'a space between characters is a glyph');
+    assert.strictEqual(glyphAtCaret([{ br: true }], 0), -1);
+  });
+
+  await test('kerning pair to write: the pair that applies, else between the groups', () => {
+    const { kerningPairFor } = require('../src/base/common/fontModel.js');
+    const font = { groups: { 'public.kern1.O': ['O', 'D'], 'public.kern2.A': ['A', 'Aacute'] }, kerning: {} };
+    assert.deepStrictEqual(kerningPairFor(font, 'O', 'A'), ['public.kern1.O', 'public.kern2.A']);
+    assert.deepStrictEqual(kerningPairFor(font, 'T', 'o'), ['T', 'o']);
+    font.kerning = { O: { Aacute: -10 } };
+    assert.deepStrictEqual(kerningPairFor(font, 'O', 'Aacute'), ['O', 'Aacute'], 'an exception that already applies is kept');
+    assert.deepStrictEqual(kerningPairFor(font, 'D', 'A'), ['public.kern1.O', 'public.kern2.A']);
+  });
+
+  await test('masters: the points one master lacks are added to it without changing either shape', async () => {
+    const { addMissingPoints } = await import('../src/base/common/outlineEdit.js');
+    const { incompatibility, bracket, interpolateGlyph } = await import('../src/base/common/interpolate.js');
+    const area = (c) => { let s2 = 0; const on = c.filter((p) => p[2] !== 'offcurve'); for (let i = 0; i < on.length; i++) { const p = on[i]; const q = on[(i + 1) % on.length]; s2 += p[0] * q[1] - q[0] * p[1]; } return s2 / 2; };
+    const glyph = (contours) => ({ name: 'o', width: 600, unicodes: [], contours, components: [], anchors: [] });
+    // a square of four corners, and a wider square with one more point on its right side
+    const a = glyph([[[0, 0, 'line'], [100, 0, 'line'], [100, 100, 'line'], [0, 100, 'line']]]);
+    const b = glyph([[[0, 0, 'line'], [200, 0, 'line'], [200, 100, 'line'], [200, 200, 'line'], [0, 200, 'line']]]);
+    assert.strictEqual(incompatibility(a, b), 'points');
+    const res = addMissingPoints(a, b);
+    assert.strictEqual(res.added, 1);
+    const a2 = glyph(res.a); const b2 = glyph(res.b);
+    assert.strictEqual(incompatibility(a2, b2), null, 'now they can be interpolated');
+    assert.deepStrictEqual(res.a[0][2].slice(0, 2), [100, 50], 'the new point is on the right side, where the other master has it');
+    assert.strictEqual(area(res.a[0]), area(a.contours[0]));
+    // a straight side facing a curve becomes a curve with its handles on the line
+    const c = glyph([[[0, 0, 'line'], [100, 0, 'line'], [100, 100, 'line'], [0, 100, 'line']]]);
+    const d = glyph([[[0, 0, 'line'], [100, 0, 'line'], [130, 40, 'offcurve'], [130, 60, 'offcurve'], [100, 100, 'curve'], [0, 100, 'line']]]);
+    const res2 = addMissingPoints(c, d);
+    assert.strictEqual(incompatibility(glyph(res2.a), glyph(res2.b)), null);
+    assert.deepStrictEqual(res2.a[0].slice(2, 4).map((p) => p.slice(0, 2)), [[100, 33], [100, 67]]);
+    assert.strictEqual(addMissingPoints(a, glyph([])), null, 'a different number of contours is not guessed');
+    // a glyph between two masters
+    const masters = [{ location: 700 }, { location: 300 }, { location: 400 }];
+    const br = bracket(masters, 550);
+    assert.deepStrictEqual([br.a.location, br.b.location, br.t], [400, 700, 0.5]);
+    const mid = interpolateGlyph(a2, b2, 0.5);
+    assert.deepStrictEqual(mid.contours[0][1].slice(0, 2), [150, 0]);
+  });
+
+  await test('contour operations: remove overlap, union, subtract, intersect and the knife on lines and curves', () => {
+    const pb = require('../src/base/common/pathBoolean.js');
+    // area of the filled shape (nonzero), measured on a fine grid — independent of the code under test
+    const fill = (contours) => {
+      const polys = contours.map((c) => {
+        const segs = pb._internal.contourSegments(c);
+        const pts = [];
+        for (const sg of segs) for (let i = 0; i < 24; i++) pts.push(pb._internal.pointAt(sg.c, i / 24));
+        return pts;
+      });
+      let n = 0;
+      for (let x = -100.5; x < 300; x += 2) for (let y = -100.5; y < 300; y += 2) {
+        let w = 0;
+        for (const poly of polys) for (let i = 0; i < poly.length; i++) {
+          const a = poly[i]; const b = poly[(i + 1) % poly.length];
+          if ((a[1] <= y && b[1] > y) || (b[1] <= y && a[1] > y)) { const xi = a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]); if (xi > x) w += b[1] > a[1] ? 1 : -1; }
+        }
+        if (w) n++;
+      }
+      return n * 4;
+    };
+    const near = (a, b, tol = 0.02) => Math.abs(a - b) <= Math.max(60, tol * b);
+    const A = square(0, 0, 100, 100); const B = square(50, 50, 150, 150);
+    const union = pb.removeOverlap([A, B]);
+    assert.ok(union.changed && union.contours.length === 1, 'two overlapping squares become one contour');
+    assert.strictEqual(union.contours[0].length, 8, 'with the two crossings as corners');
+    assert.ok(near(fill(union.contours), 17500), `area ${fill(union.contours)}`);
+    assert.ok(require('../src/base/common/fontModel.js').contourArea(union.contours[0]) > 0, 'counter-clockwise, as an outer contour');
+    const sub = pb.booleanOp([A, B], new Set([1]), 'subtract');
+    assert.ok(sub.contours.length === 1 && near(fill(sub.contours), 7500), `subtract ${fill(sub.contours)}`);
+    const inter = pb.booleanOp([A, B], new Set([1]), 'intersect');
+    assert.ok(inter.contours.length === 1 && near(fill(inter.contours), 2500) && inter.contours[0].length === 4, `intersect ${JSON.stringify(inter.contours)}`);
+    // nothing overlaps: nothing changes, not even the start points
+    const C = square(200, 0, 250, 50);
+    const apart = pb.removeOverlap([A, C]);
+    assert.ok(!apart.changed && apart.contours[0] === A && apart.contours[1] === C);
+    // a counter (wound the other way) stays; a contour inside another, wound the same way, goes
+    const hole = require('../src/base/common/fontModel.js').reverseContour(square(25, 25, 75, 75));
+    assert.ok(!pb.removeOverlap([A, hole]).changed, 'a counter is not an overlap');
+    const inner = pb.removeOverlap([A, square(25, 25, 75, 75)]);
+    assert.ok(inner.changed && inner.contours.length === 1 && inner.contours[0] === A);
+    // curves: a circle over a square keeps its curves, and the shape
+    const k = 0.5523 * 50;
+    const circle = [[100, 50, 'curve', 1], [100, 50 + k, 'offcurve'], [50 + k, 100, 'offcurve'], [50, 100, 'curve', 1], [50 - k, 100, 'offcurve'], [0, 50 + k, 'offcurve'], [0, 50, 'curve', 1], [0, 50 - k, 'offcurve'], [50 - k, 0, 'offcurve'], [50, 0, 'curve', 1], [50 + k, 0, 'offcurve'], [100, 50 - k, 'offcurve']]
+      .map((p) => (p[2] === 'offcurve' ? [p[0] + 60, p[1] + 20, 'offcurve'] : [p[0] + 60, p[1] + 20, ...p.slice(2)]));
+    const before = fill([A]) + fill([circle]) - fill(pb.booleanOp([A, circle], new Set([1]), 'intersect').contours);
+    const mixed = pb.removeOverlap([A, circle]);
+    assert.ok(mixed.contours.length === 1 && mixed.contours[0].some((p) => p[2] === 'curve') && near(fill(mixed.contours), before), `circle ${fill(mixed.contours)} vs ${before}`);
+    // the knife: a square cut in two, and an O cut through both contours
+    const cut = pb.knife([A], [50, -20], [50, 120]);
+    assert.ok(cut.contours.length === 2 && cut.contours.every((c) => near(fill([c]), 5000)), JSON.stringify(cut.contours));
+    const o = pb.knife([A, hole], [-10, 50], [110, 50]);
+    assert.ok(o.contours.length === 2 && near(fill(o.contours), 7500) && o.contours.every((c) => c.length === 8), JSON.stringify(o.contours));
+    assert.ok(!pb.knife([A], [200, 0], [300, 0]).changed, 'a line that misses changes nothing');
+    // extremes: a circle drawn with its points on the diagonals gets its four extremes (top, left, bottom, right)
+    const diag = pb.addExtremes([[71, 71, 'curve', 1], [40, 100, 'offcurve'], [-40, 100, 'offcurve'], [-71, 71, 'curve', 1], [-100, 40, 'offcurve'], [-100, -40, 'offcurve'],
+      [-71, -71, 'curve', 1], [-40, -100, 'offcurve'], [40, -100, 'offcurve'], [71, -71, 'curve', 1], [100, -40, 'offcurve'], [100, 40, 'offcurve']]);
+    const ons = diag.contour.filter((p) => p[2] === 'curve');
+    assert.ok(diag.added === 4 && ons.length === 8 && ons.some((p) => p[0] === 0 && p[1] > 90) && ons.some((p) => p[1] === 0 && p[0] < -90), JSON.stringify(ons));
+    assert.strictEqual(pb.addExtremes(diag.contour).added, 0, 'extremes are only added once');
+    // tidying: a point in the middle of a line and a point on top of another go; a straight curve becomes a line
+    const messy = [[0, 0, 'line'], [50, 0, 'line'], [100, 0, 'line'], [100, 0, 'line'], [100, 30, 'offcurve'], [100, 70, 'offcurve'], [100, 100, 'curve'], [0, 100, 'line']];
+    const tidy = pb.tidyContour(messy);
+    assert.deepStrictEqual(tidy.contour.map((p) => p.slice(0, 3)), [[0, 0, 'line'], [100, 0, 'line'], [100, 100, 'line'], [0, 100, 'line']]);
+    assert.deepStrictEqual(pb.duplicatePoints(messy), [3]);
+    assert.strictEqual(pb.tidyContour(A).contour, A, 'a tidy contour is left alone');
+    // exporting without overlaps works on a copy: the project keeps its contours
+    const fontIn = { glyphs: { x: { name: 'x', contours: [A, B] }, y: { name: 'y', contours: [A] } } };
+    const flat = pb.fontWithoutOverlaps(fontIn);
+    assert.ok(flat.glyphs.x.contours.length === 1 && fontIn.glyphs.x.contours.length === 2 && flat.glyphs.y === fontIn.glyphs.y);
+    // a rectangle and an ellipse are outer contours (counter-clockwise), the ellipse with its four extremes
+    const fm2 = require('../src/base/common/fontModel.js');
+    assert.ok(fm2.contourArea(pb.primitive('rect', 100, 100, 0, 0)) > 0 && fm2.contourArea(pb.primitive('ellipse', 0, 0, 200, 100)) > 0);
+    assert.strictEqual(pb.addExtremes(pb.primitive('ellipse', 0, 0, 200, 100)).added, 0);
+  });
+
+  await test('background layer: kept per glyph and per master, written as UFO layers and read back', () => {
+    const font = readUfo(SANS);
+    const bold = font.weights.find((w) => w.id !== font.weight);
+    font.glyphs.a.background = { contours: [square(0, 0, 100, 100)], components: [] };
+    bold.glyphs.n.background = { contours: [square(10, 10, 50, 50)], components: [{ base: 'o', transform: [1, 0, 0, 1, 5, 0] }] };
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lf-bg-')) + '/Bg.ufo';
+    writeUfo(out, font);
+    const layers = parsePlist(fs.readFileSync(path.join(out, 'layercontents.plist'), 'utf8')).map((l) => l[0]);
+    assert.ok(layers.includes('public.background') && layers.includes(`${bold.layer || bold.name}.background`), layers.join());
+    const back = readUfo(out);
+    const boldBack = back.weights.find((w) => w.id === bold.id);
+    assert.deepStrictEqual(back.glyphs.a.background.contours[0].map((p) => p.slice(0, 3)), square(0, 0, 100, 100));
+    assert.ok(!back.glyphs.n.background && boldBack.glyphs.n.background.contours.length === 1 && boldBack.glyphs.n.background.components[0].base === 'o' && !boldBack.glyphs.a.background);
+    assert.ok(!fs.readFileSync(path.join(out, 'glyphs', 'a.glif'), 'utf8').includes('100" y="100'), 'the background is not written into the glyph itself');
+    // no background left: the layers go away
+    delete back.glyphs.a.background; delete boldBack.glyphs.n.background;
+    writeUfo(out, back);
+    const after = parsePlist(fs.readFileSync(path.join(out, 'layercontents.plist'), 'utf8')).map((l) => l[0]);
+    assert.ok(!after.some((n) => /background/.test(n)) && !fs.readdirSync(out).some((f) => /background/i.test(f)), after.join());
+  });
+
+  await test('languages: the system language picks the right catalog, and every catalog answers', () => {
+    const nls = require('../src/platform/nls/common/nls');
+    assert.deepStrictEqual(nls.LOCALES, ['en', 'pt-BR', 'pt-PT', 'es', 'fr', 'de', 'it']);
+    const pick = (tag) => nls.negotiateLocale([tag]);
+    assert.strictEqual(pick('pt'), 'pt-BR');
+    assert.strictEqual(pick('pt-BR'), 'pt-BR');
+    assert.strictEqual(pick('pt-PT'), 'pt-PT');
+    assert.strictEqual(pick('pt-AO'), 'pt-PT', 'Portuguese outside Brazil follows the European norm');
+    assert.strictEqual(pick('es-MX'), 'es');
+    assert.strictEqual(pick('de-AT'), 'de');
+    assert.strictEqual(pick('fr_CA'), 'fr');
+    assert.strictEqual(pick('ja-JP'), 'en', 'a language without a catalog gets English');
+    assert.strictEqual(pick('nl'), 'en');
+    assert.strictEqual(nls.negotiateLocale(['nl', 'it-CH']), 'it', 'the next preferred language is tried');
+    const seen = new Set();
+    for (const id of nls.LOCALES) {
+      nls.setLocale(id);
+      assert.strictEqual(nls.getLocale(), id);
+      const save = nls.t('common.save');
+      assert.ok(save && save !== 'common.save', `${id} has the message`);
+      seen.add(save);
+      assert.ok(/3/.test(nls.tn('common.glyphs', 3)), `${id} counts glyphs`);
+      assert.ok(nls.tn('common.glyphs', 0) && nls.tn('common.glyphs', 1), `${id} has every plural form it needs`);
+    }
+    assert.ok(seen.size >= 6, 'the catalogs are really translated');
+    nls.setLocale('en');
+  });
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(failed ? `${failed} of ${count} tests failed` : `${count} tests passed`);
   process.exit(failed ? 1 : 0);

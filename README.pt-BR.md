@@ -8,14 +8,14 @@
 
 Um editor de fontes livre e de código aberto, com uma interface limpa, feito para pessoas — e pronto para agentes de IA.
 
-[English](README.md) · **Português (Brasil)**
+[English](README.md) · **Português (Brasil)** · [Português (Portugal)](README.pt-PT.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Italiano](README.it.md)
 
 <sub>pelo <b>LionFoundry Team</b> · criado e idealizado por <b>Daniel Michelon De Carli</b></sub>
 
-![Versão 0.12.2](https://img.shields.io/badge/vers%C3%A3o-0.12.2-24292b)
+![Versão 0.17.0](https://img.shields.io/badge/vers%C3%A3o-0.17.0-24292b)
 ![Estado: experimental](https://img.shields.io/badge/estado-experimental-cf874b)
 ![Licença: GPL-3.0](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-7b6f9f)
-![Interface: English, Português](https://img.shields.io/badge/interface-English%20%7C%20Portugu%C3%AAs-46608a)
+![Interface: 7 línguas](https://img.shields.io/badge/interface-7%20l%C3%ADnguas-46608a)
 
 <img src="docs/screenshots/glyph-pt.png" alt="LionFoundry em português: uma letra em edição, com pontos e alças, as linhas de métrica e o painel à direita" width="900">
 
@@ -31,7 +31,7 @@ Baixe o instalador do seu sistema. Os links trazem sempre a **versão mais recen
 
 > Os instaladores ainda não são assinados com um certificado pago. Na primeira vez, o Windows pode mostrar "O Windows protegeu o computador" (**Mais informações › Executar assim mesmo**) e o macOS pede para liberar o programa em **Ajustes do Sistema › Privacidade e Segurança › Abrir Mesmo Assim**. As somas de verificação de todos os arquivos estão em [`SHA256SUMS.txt`](https://github.com/danielcarli/lionfoundry/releases/latest/download/SHA256SUMS.txt).
 
-Os instaladores são gerados pelo GitHub Actions a cada tag de versão (`.github/workflows/release.yml`), em máquinas Windows, macOS e Linux, a partir do código deste repositório. Eles são novos: os pacotes de Linux foram experimentados antes desta versão; os instaladores de Windows e de macOS ainda não foram experimentados num computador de verdade — se algum não abrir, por favor [avise](https://github.com/danielcarli/lionfoundry/issues). Sempre dá para [rodar a partir do código](#começar).
+Os instaladores são gerados pelo GitHub Actions a cada tag de versão (`.github/workflows/release.yml`), em máquinas Windows, macOS e Linux, a partir do código deste repositório. Eles são novos: os pacotes de Linux foram experimentados antes da publicação e o instalador de Windows já foi instalado e aberto num computador de verdade; o de macOS ainda não foi experimentado — se algum não abrir, por favor [avise](https://github.com/danielcarli/lionfoundry/issues). Sempre dá para [rodar a partir do código](#começar).
 
 ## Da primeira letra às fontes prontas
 
@@ -41,7 +41,7 @@ O LionFoundry leva você pelo trabalho inteiro em uma janela só: **desenhar** a
 - **Fácil de ler.** Uma janela limpa, quatro temas, todos os atalhos em uma tela.
 - **Familiar.** As palavras e as teclas dos editores de fontes que você já conhece: masters, instâncias, guias, `V`, `P`, `+`, `−`.
 
-> **O LionFoundry é um projeto experimental.** Ele cobre todas as etapas de fazer uma tipografia em uma primeira forma, básica — veja em [Onde o programa está](#onde-o-programa-está) o que ainda falta. Até agora só foi usado em Linux; em Windows e macOS não foi testado. Guarde cópias das suas fontes.
+> **O LionFoundry é um projeto experimental.** Ele cobre todas as etapas de fazer uma tipografia em uma primeira forma, básica — veja em [Onde o programa está](#onde-o-programa-está) o que ainda falta. Foi usado principalmente em Linux; em Windows teve só um primeiro teste e em macOS não foi testado. Guarde cópias das suas fontes.
 
 ## O que ele tem de diferente
 
@@ -56,11 +56,11 @@ O LionFoundry leva você pelo trabalho inteiro em uma janela só: **desenhar** a
 
 ## Veja
 
-<sub>As imagens abaixo mostram a interface em inglês; o programa também está em português.</sub>
+<sub>As imagens abaixo mostram a interface em inglês; o programa está em sete línguas, entre elas o português.</sub>
 
 ### Desenhar
 
-Selecionar, caneta, escala, adicionar ponto e remover ponto. Selecione vários pontos e aparece uma caixa em volta deles: arraste um canto para aumentar ou diminuir a forma, com Shift para manter as proporções e Alt para escalar a partir do centro — os gestos do Illustrator. Alças que ficam na horizontal, na vertical ou a 45° quando você quer. **Guias** por glifo e **aderir**, para segurar os pontos na linha. Digite a largura e as margens; mova, escale, gire, incline e espelhe. Componentes e âncoras montam as letras acentuadas para você.
+Selecionar, caneta, escala, adicionar ponto, remover ponto, faca, retângulo e elipse. **Remover sobreposição**, unir, subtrair e interseção trabalham nas próprias curvas, então as curvas continuam curvas; **Adicionar extremos** e **Limpar contornos** deixam os pontos onde os tipógrafos querem. Girar, uma **régua** que mostra a espessura de cada traço que atravessa, um laço, e um **fundo** para cada glifo e master, para comparar ou decalcar. Selecione vários pontos e aparece uma caixa em volta deles: arraste um canto para aumentar ou diminuir a forma, com Shift para manter as proporções e Alt para escalar a partir do centro — os gestos do Illustrator. Alças que ficam na horizontal, na vertical ou a 45° quando você quer. **Guias** por glifo e **aderir**, para segurar os pontos na linha. Digite a largura e as margens; mova, escale, gire, incline e espelhe. Componentes e âncoras montam as letras acentuadas para você.
 
 <div align="center">
 <img src="docs/screenshots/guides-daca.png" alt="Um glifo com guias horizontais, verticais e diagonais, e pontos aderidos a elas" width="860">
@@ -88,9 +88,19 @@ Enquanto você desenha o Bold, o Regular está ali, ao fundo. O painel diz se os
 <img src="docs/screenshots/weights-daca.png" alt="Um glifo com o mesmo glifo de outro master ao fundo, e o painel de compatibilidade" width="860">
 </div>
 
+Ligue **Todos os masters** para ver a letra em cada master, embaixo da linha que você desenha; um duplo clique em um deles vai para ele. **Compatibilidade** numera os pontos e liga cada um ao mesmo ponto do outro master — um anel vermelho marca o que não tem par, e **Adicionar pontos que faltam** coloca o que falta sem mudar a forma. **Pré-visualização** mostra a linha em qualquer peso entre os masters. Segure `Alt` com Adicionar ponto, Remover ponto, Inverter ou Corrigir direção para mudar todos os masters de uma vez.
+
+<div align="center">
+<img src="docs/screenshots/masters-daca.png" alt="Um glifo com os pontos numerados e ligados ao outro master, o glifo em cada master embaixo, e o botão Adicionar pontos que faltam" width="860">
+</div>
+
 ### Espaçar e fazer o kerning onde se lê
 
-Clique numa letra na prova e ajuste o espaçamento e o kerning ali mesmo, no texto. A vista **Kerning** mantém grupos e pares organizados: um par feito para um grupo serve para todas as letras dele.
+A vista Glifo é uma linha de texto, como nos outros editores de fontes: digite uma palavra, edite qualquer letra dela no meio das outras e mude pelo teclado as margens e o kerning da letra depois do cursor (`Alt`, `Ctrl` e `Ctrl+Alt` com as setas). Na prova, clique numa letra e ajuste o espaçamento e o kerning ali mesmo, no texto. A vista **Kerning** mantém grupos e pares organizados: um par feito para um grupo serve para todas as letras dele.
+
+<div align="center">
+<img src="docs/screenshots/text-daca.png" alt="A vista Glifo com uma linha de texto: a letra em edição entre as outras, o kerning em azul e as margens embaixo de cada letra" width="860">
+</div>
 
 | | |
 |---|---|
@@ -124,7 +134,7 @@ Escolha o master em edição ou a família inteira, marque os formatos, pronto. 
 
 ### Deixar do seu jeito
 
-Quatro temas, português e inglês, e todos os atalhos em uma tela (aperte `?`).
+Quatro temas, sete línguas — English, Português (Brasil e Portugal), Español, Français, Deutsch e Italiano — e todos os atalhos em uma tela (aperte `?`). Inglês e português do Brasil são os textos revisados; as outras traduções ainda não foram lidas por falantes nativos, e correções são bem-vindas.
 
 | | | |
 |---|---|---|
@@ -203,11 +213,11 @@ O LionFoundry é novo. Esta é a lista honesta.
 
 | Faz | Ainda não faz |
 |---|---|
-| Abre UFO 2 e 3, grava UFO 3, importa TrueType | OpenType CFF (`.otf`), SFD do FontForge, arquivos do Glyphs |
+| Abre UFO 2 e 3, grava UFO 3, importa TrueType | OpenType CFF (`.otf`), SFD do FontForge, arquivos do software padrão da indústria |
 | Exporta TrueType e WOFF2, compilados por código próprio | **Hinting** (as fontes ficam bem em impressão, na web e em telas de alta densidade; ficam moles em tamanhos pequenos nas telas antigas do Windows) |
 | Masters, itálicos e instâncias no eixo de peso | **Fontes variáveis** (um `.designspace` é exportado para outras ferramentas), eixo de largura |
-| Corrige a compatibilidade reordenando contornos e pontos iniciais | Acrescentar os pontos que faltam entre dois masters |
-| Marca formas sobrepostas para que sejam preenchidas corretamente | Remover sobreposições, faca, operações booleanas |
+| Corrige a compatibilidade (contornos, pontos iniciais) e acrescenta os pontos que faltam em um master | Compatibilizar masters com número diferente de contornos |
+| Remove sobreposições, une, subtrai, faz interseção e corta com a faca, nas próprias curvas | Componentes de canto e inteligentes, filtros (contorno deslocado, cantos arredondados) |
 | Grupos e pares de kerning, espaçamento na prova | Janela de métricas com vários glifos, espaçamento e kerning automáticos |
 | Substituições, ligaduras, kerning e posicionamento de acentos | Lookups contextuais; escritas da direita para a esquerda e complexas |
 | Glifos coloridos em cor chapada (COLR/CPAL) | Gradientes, cor em SVG e em bitmap |
@@ -246,7 +256,7 @@ src/
                    features e composição de texto, validação, interpolação, o compilador TrueType, a API de scripts
   platform/        serviços do processo principal: leitor e gravador de UFO, importador de TrueType, WOFF2, scripts, versões
   code/            ponto de entrada do Electron e a ponte preload
-  nls/             catálogos de mensagens: en.json, pt-BR.json
+  nls/             catálogos de mensagens: en.json e seis traduções, listadas em locales.json
   workbench/       partes do layout, serviços (a fonte aberta, desfazer, exportar, temas) e as vistas:
                    fonte, glifo, prova, features, família, verificar, scripts, informações, kerning
 examples/          as tipografias de exemplo (UFO 3)
@@ -266,13 +276,13 @@ A fonte é dado puro (JSON) em todo lugar, e toda alteração passa por um ponto
 | `npm run examples` | Regenera as tipografias de exemplo (precisa de Python com `fonttools` e `skia-pathops`) |
 | `npm run dist` | Gera os instaladores do sistema em que você está, com o electron-builder, em `dist/` (o fluxo de release faz isso para os três sistemas) |
 
-As fontes exportadas também foram conferidas fora da suíte de testes com o OpenType Sanitizer, o fontTools, o FreeType e o HarfBuzz. Código, comentários e documentação técnica estão em inglês; a interface está em inglês e em português.
+As fontes exportadas também foram conferidas fora da suíte de testes com o OpenType Sanitizer, o fontTools, o FreeType e o HarfBuzz. Código, comentários e documentação técnica estão em inglês; a interface está em sete línguas (`npm run test:i18n` confere se todo catálogo tem todas as mensagens).
 
 Segurança: `contextIsolation` e `sandbox` ligados, sem `nodeIntegration`, uma Content Security Policy estrita. O processo principal só lê os exemplos e o que você escolheu num diálogo do sistema, e só grava onde você escolheu.
 
 ## Histórico de versões
 
-Veja o [CHANGELOG.md](CHANGELOG.md) (em inglês) — versão atual: **0.12.2**.
+Veja o [CHANGELOG.md](CHANGELOG.md) (em inglês) — versão atual: **0.17.0**.
 
 ## Créditos
 

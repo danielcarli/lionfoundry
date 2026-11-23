@@ -8,14 +8,14 @@
 
 A free, open-source font editor with a clean interface, made for people — and ready for AI agents.
 
-**English** · [Português (Brasil)](README.pt-BR.md)
+**English** · [Português (Brasil)](README.pt-BR.md) · [Português (Portugal)](README.pt-PT.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Italiano](README.it.md)
 
 <sub>by the <b>LionFoundry Team</b> · created and conceived by <b>Daniel Michelon De Carli</b></sub>
 
-![Version 0.12.2](https://img.shields.io/badge/version-0.12.2-24292b)
+![Version 0.17.0](https://img.shields.io/badge/version-0.17.0-24292b)
 ![Status: experimental](https://img.shields.io/badge/status-experimental-cf874b)
 ![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-7b6f9f)
-![UI languages: English, Português](https://img.shields.io/badge/UI-English%20%7C%20Portugu%C3%AAs-46608a)
+![UI languages: 7](https://img.shields.io/badge/UI-7%20languages-46608a)
 
 <img src="docs/screenshots/glyph-daca.png" alt="LionFoundry: the letter a being edited, with its points and handles, the metric lines and the panel on the right" width="900">
 
@@ -31,7 +31,7 @@ Download the installer for your system. The links always bring the **latest vers
 
 > The installers are not signed with a paid certificate yet. On first launch, Windows may show "Windows protected your PC" (**More info › Run anyway**) and macOS asks you to allow the app in **System Settings › Privacy & Security › Open Anyway**. The checksums of every file are in [`SHA256SUMS.txt`](https://github.com/danielcarli/lionfoundry/releases/latest/download/SHA256SUMS.txt).
 
-The installers are built by GitHub Actions for each version tag (`.github/workflows/release.yml`), on Windows, macOS and Linux machines, from the code of this repository. They are new: the Linux packages were tried before this release; the Windows and macOS installers have not been tried on a real computer yet — if one does not open, please [tell us](https://github.com/danielcarli/lionfoundry/issues). You can always [run from the source](#get-started).
+The installers are built by GitHub Actions for each version tag (`.github/workflows/release.yml`), on Windows, macOS and Linux machines, from the code of this repository. They are new: the Linux packages were tried before release and the Windows installer has been installed and opened on a real computer; the macOS installer has not been tried yet — if one does not open, please [tell us](https://github.com/danielcarli/lionfoundry/issues). You can always [run from the source](#get-started).
 
 ## From the first letter to the finished fonts
 
@@ -41,7 +41,7 @@ LionFoundry takes you through the whole job in one window: **draw** the letters,
 - **Easy to read.** One clean window, four themes, every shortcut on one screen.
 - **Familiar.** The words and the keys of the font editors you already know: masters, instances, guides, `V`, `P`, `+`, `−`.
 
-> **LionFoundry is an experimental project.** It covers every step of making a typeface in a first, basic form — see [Where it stands](#where-it-stands) for what is still missing. It has only been used on Linux so far; on Windows and macOS it is untested. Keep copies of your fonts.
+> **LionFoundry is an experimental project.** It covers every step of making a typeface in a first, basic form — see [Where it stands](#where-it-stands) for what is still missing. It has been used mostly on Linux; on Windows it has only had a first trial and on macOS it is untested. Keep copies of your fonts.
 
 ## What makes it different
 
@@ -58,7 +58,7 @@ LionFoundry takes you through the whole job in one window: **draw** the letters,
 
 ### Draw
 
-Select, pen, scale, add point and remove point. Select several points and a box appears around them: drag a corner to make the shape larger or smaller, with Shift to keep the proportions and Alt to scale from the centre — the gestures of Illustrator. Handles that stay horizontal, vertical or at 45° when you want them to. **Guides** per glyph and **snap** to hold your points on the line. Type the width and the side bearings; move, scale, rotate, slant and mirror. Components and anchors build accented letters for you.
+Select, pen, scale, add point, remove point, knife, rectangle and ellipse. **Remove overlap**, union, subtract and intersect work on the curves themselves, so curves stay curves; **Add extremes** and **Tidy up** keep the points where type designers want them. Rotate, a **ruler** that shows the thickness of every stroke it crosses, a lasso, and a **background** for each glyph and master, to compare with or trace over. Select several points and a box appears around them: drag a corner to make the shape larger or smaller, with Shift to keep the proportions and Alt to scale from the centre — the gestures of Illustrator. Handles that stay horizontal, vertical or at 45° when you want them to. **Guides** per glyph and **snap** to hold your points on the line. Type the width and the side bearings; move, scale, rotate, slant and mirror. Components and anchors build accented letters for you.
 
 <div align="center">
 <img src="docs/screenshots/guides-daca.png" alt="A glyph with horizontal, vertical and diagonal guides, and points snapped to them" width="860">
@@ -86,9 +86,19 @@ While you draw the Bold, the Regular is right there behind it. The panel says wh
 <img src="docs/screenshots/weights-daca.png" alt="A glyph with the same glyph of another master drawn behind it, and the compatibility panel" width="860">
 </div>
 
+Turn on **All masters** to see the letter in every master under the line you are drawing; a double-click on one goes to it. **Compatibility** numbers the points and links each one to the same point in the other master — a red ring marks what has no match, and **Add missing points** puts it in without changing the shape. **Preview** shows the line at any weight between the masters. Hold `Alt` with Add point, Remove point, Reverse or Correct direction to change every master at once.
+
+<div align="center">
+<img src="docs/screenshots/masters-daca.png" alt="A glyph with its points numbered and linked to the other master, the glyph in every master under it, and the Add missing points button" width="860">
+</div>
+
 ### Space and kern where you read
 
-Click a letter in the proof and adjust its spacing and its kerning right there, in the text. The **Kerning** view keeps groups and pairs organised: one pair set for a group serves every letter in it.
+The Glyph view is a line of text, as in other font editors: type a word, edit any of its letters among the others, and change the side bearings and the kerning of the letter after the cursor from the keyboard (`Alt`, `Ctrl` and `Ctrl+Alt` with the arrows). In the proof, click a letter and adjust its spacing and its kerning right there, in the text. The **Kerning** view keeps groups and pairs organised: one pair set for a group serves every letter in it.
+
+<div align="center">
+<img src="docs/screenshots/text-daca.png" alt="The Glyph view with a line of text: the letter being edited among the others, kerning in blue and the side bearings under each letter" width="860">
+</div>
 
 | | |
 |---|---|
@@ -122,7 +132,7 @@ Choose the master you are editing or the whole family, pick the formats, done. T
 
 ### Make it yours
 
-Four themes, English and Portuguese, and every shortcut on one screen (press `?`).
+Four themes, seven languages — English, Português (Brasil and Portugal), Español, Français, Deutsch and Italiano — and every shortcut on one screen (press `?`). English and Brazilian Portuguese are the reviewed texts; the other translations have not been read by native speakers yet, and corrections are welcome.
 
 | | | |
 |---|---|---|
@@ -201,11 +211,11 @@ LionFoundry is young. This is the honest list.
 
 | It does | It does not yet |
 |---|---|
-| Opens UFO 2 and 3, saves UFO 3, imports TrueType | OpenType CFF (`.otf`), FontForge SFD, Glyphs files |
+| Opens UFO 2 and 3, saves UFO 3, imports TrueType | OpenType CFF (`.otf`), FontForge SFD, files of the industry-standard software |
 | Exports TrueType and WOFF2, compiled by its own code | **Hinting** (fonts are fine in print, on the web and on high-density screens; soft in small sizes on older Windows screens) |
 | Masters, italics and instances on the weight axis | **Variable fonts** (a `.designspace` is exported for other tools), a width axis |
-| Fixes compatibility by reordering contours and start points | Adding the points that are missing between two masters |
-| Marks overlapping shapes so they fill correctly | Removing overlaps, a knife, boolean operations |
+| Fixes compatibility (contours, start points) and adds the points one master lacks | Making masters with a different number of contours compatible |
+| Removes overlaps, union, subtract, intersect and a knife, on the curves themselves | Corner and smart components, filters (offset, rounded corners) |
 | Kerning groups and pairs, spacing in the proof | A metrics window with many glyphs, automatic spacing and kerning |
 | Substitutions, ligatures, kerning and accent placement | Contextual lookups; right-to-left and complex scripts |
 | Flat colour glyphs (COLR/CPAL) | Gradients, SVG and bitmap colour |
@@ -244,7 +254,7 @@ src/
                    features and shaping, validation, interpolation, the TrueType compiler, the script API
   platform/        main-process services: UFO reader and writer, TrueType importer, WOFF2, scripts, versions
   code/            Electron entry point and the preload bridge
-  nls/             message catalogs: en.json, pt-BR.json
+  nls/             message catalogs: en.json and six translations, listed in locales.json
   workbench/       layout parts, services (the open font, undo, export, themes) and the views:
                    font, glyph, proof, features, family, check, scripts, info, kerning
 examples/          the example typefaces (UFO 3)
@@ -264,13 +274,13 @@ The font is plain data (JSON) everywhere, and every change goes through one plac
 | `npm run examples` | Rebuild the example typefaces (needs Python with `fonttools` and `skia-pathops`) |
 | `npm run dist` | Build the installers of the system you are on with electron-builder, into `dist/` (the release workflow does it for the three systems) |
 
-Exported fonts were also checked outside the test suite with the OpenType Sanitizer, fontTools, FreeType and HarfBuzz. Code, comments and documentation are in English; the interface is in English and Portuguese.
+Exported fonts were also checked outside the test suite with the OpenType Sanitizer, fontTools, FreeType and HarfBuzz. Code, comments and documentation are in English; the interface is in seven languages (`npm run test:i18n` verifies that every catalog has every message).
 
 Security: `contextIsolation` and `sandbox` on, no `nodeIntegration`, a strict Content Security Policy. The main process only reads the examples and what you picked in a native dialog, and only writes where you chose.
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) — current version: **0.12.2**.
+See [CHANGELOG.md](CHANGELOG.md) — current version: **0.17.0**.
 
 ## Credits
 

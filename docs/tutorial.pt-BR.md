@@ -1,6 +1,6 @@
 # Do zero à primeira tipografia
 
-[English](tutorial.md) · **Português (Brasil)**
+[English](tutorial.md) · **Português (Brasil)** · [Português (Portugal)](tutorial.pt-PT.md) · [Español](tutorial.es.md) · [Français](tutorial.fr.md) · [Deutsch](tutorial.de.md) · [Italiano](tutorial.it.md)
 
 Neste tutorial você sai de um projeto vazio e chega a uma pequena família pronta para instalar: **Regular**, **Bold** e **Italic**, mais dois estilos que o LionFoundry calcula sozinho entre o Regular e o Bold.
 
@@ -51,25 +51,31 @@ Quase todo o desenho acontece na vista **Glifo** (`Ctrl+2`). Esta é a barra del
 
 | Nº | Ferramenta | Tecla | Para que serve |
 |---|---|---|---|
-| 2 | **Selecionar** | `V` | Clicar num ponto, arrastar uma caixa para pegar vários, arrastar para mover. As setas movem 1 unidade; com `Shift`, 10. `Delete` apaga. |
-| 3 | **Caneta** | `P` | Desenhar. Clique: ponto reto. Clique e arraste: ponto de curva. Clique no primeiro ponto: fecha a forma. |
-| 4 | **Escala** | `S` | Aumentar ou diminuir o que está selecionado. Arraste; `Shift` mantém as proporções. |
-| 5 | **Adicionar ponto** | `+` | Clique na linha e um ponto entra ali. A forma não muda. |
-| 6 | **Remover ponto** | `−` | Clique num ponto e ele sai. A curva continua o mais parecida possível. |
-| 7 | **Aderir** (o ímã) | `M` | Puxa o que você arrasta para as linhas de altura e para as guias. `Alt` solta por um movimento. |
+| 2 | **Texto** | `T` | Digitar para pôr letras na linha. A letra depois do cursor é a que as teclas mudam (passo 4). `Esc` volta a desenhá-la. |
+| 3 | **Selecionar** | `V` | Clicar num ponto, arrastar uma caixa para pegar vários, arrastar para mover. As setas movem 1 unidade; com `Shift`, 10. `Delete` apaga. |
+| 4 | **Caneta** | `P` | Desenhar. Clique: ponto reto. Clique e arraste: ponto de curva. Clique no primeiro ponto: fecha a forma. |
+| 5 | **Escala** | `S` | Aumentar ou diminuir o que está selecionado. Arraste; `Shift` mantém as proporções. |
+| 6 | **Adicionar ponto** | `+` | Clique na linha e um ponto entra ali. A forma não muda. |
+| 7 | **Remover ponto** | `−` | Clique num ponto e ele sai. A curva continua o mais parecida possível. |
+| 8 | **Faca** | `E` | Arraste uma linha atravessando as formas: elas são cortadas em partes fechadas. |
+| 9 | **Retângulo** / **Elipse** | `F` | Arraste de um canto ao outro para desenhar um retângulo; `F` de novo muda para a elipse. `Shift`: quadrado ou círculo. |
+| 10 | **Girar** | `R` | Gira o que está selecionado em volta do centro (clique para escolher outro ponto). `Shift`: de 15° em 15°. |
+| 11 | **Régua** | `L` | Arraste uma linha: ela mostra o comprimento, o ângulo e a espessura de cada traço que atravessa. |
+| 12 | **Aderir** (o ímã) | `M` | Puxa o que você arrasta para as linhas de altura e para as guias. `Alt` solta por um movimento. |
 
 **Para ver**
 
 | Nº | Botão | O que mostra ou esconde |
 |---|---|---|
 | 1 | Setas | Glifo anterior e próximo (também `[` e `]`) |
-| 8 | Preenchimento | A letra pintada, como vai aparecer no texto |
-| 9 | Pontos | Os pontos e as alças |
-| 10 | Métricas | As linhas de altura e a largura da letra |
-| 11 | Âncoras | Os pontos de encaixe dos acentos |
-| 12 | Guias | As suas linhas de apoio |
-| 13 | Zoom | Aproximar e afastar (também a roda do mouse, ou `Ctrl` `+` e `Ctrl` `−`) |
-| 14 | Enquadrar | Mostra o glifo inteiro (`Ctrl+0`). `Espaço` + arrastar move a vista. |
+| 13 | Preenchimento | A letra pintada, como vai aparecer no texto |
+| 14 | Pontos | Os pontos e as alças |
+| 15 | Métricas | As linhas de altura e a largura da letra |
+| 16 | Âncoras | Os pontos de encaixe dos acentos |
+| 17 | Guias | As suas linhas de apoio |
+| 18 | Fundo | A cópia do desenho guardada atrás dele, para comparar ou decalcar |
+| 19 | Zoom | Aproximar e afastar (também a roda do mouse, ou `Ctrl` `+` e `Ctrl` `−`) |
+| 20 | Enquadrar | Mostra o glifo inteiro (`Ctrl+0`). `Espaço` + arrastar move a vista. |
 
 Quando o projeto tem mais de um master, aparece mais um botão, **Outros masters**: ele mostra o outro peso ao fundo.
 
@@ -129,6 +135,10 @@ Precisa de uma linha a mais? Em **Guias**, no painel, adicione uma guia horizont
 <img src="screenshots/guides-daca.png" alt="Guias em um glifo, com pontos aderidos a elas" width="820">
 </div>
 
+**Montar com formas.** Algumas letras saem mais rápido em pedaços: uma haste com o **Retângulo** (`F`), um bojo com a **Elipse** (`F` de novo). Deixe que se sobreponham e aperte **Remover sobreposição** (`Ctrl+Shift+O`): viram um contorno só, e as curvas continuam curvas. A **Faca** (`E`) corta uma forma em duas; com contornos selecionados, **Unir**, **Subtrair** e **Interseção** combinam as formas. **Adicionar extremos** põe os pontos nos extremos para você, e **Limpar contornos** (`Ctrl+Shift+T`) tira os pontos que sobram.
+
+**Medir e comparar.** A **Régua** (`L`) mostra a espessura de cada traço que atravessa — um jeito rápido de manter as hastes iguais. Antes de uma mudança grande, **Copiar para o fundo** (painel) guarda o desenho antigo atrás do novo; **Trocar com o fundo** traz ele de volta para a frente. `Tab` passa de ponto em ponto, `Ctrl+Shift+A` põe os pontos selecionados numa linha, e `Alt` + arrastar faz um laço em volta dos pontos.
+
 ## 3. O resto do alfabeto
 
 Não desenhe cada letra do zero. Copie e adapte.
@@ -159,6 +169,8 @@ Espaçamento se acerta lendo, não medindo. Abra a **Prova** (`Ctrl+3`).
 <div align="center">
 <img src="screenshots/proof-daca.png" alt="A Prova, com as margens e o kerning da letra clicada" width="820">
 </div>
+
+**Espaçar onde se desenha.** O mesmo funciona na vista **Glifo**: digite a palavra no campo **Texto**, aperte `T` e ponha o cursor antes de uma letra. `Alt + ← →` mudam a margem esquerda dela, `Ctrl + ← →` a direita, `Ctrl+Alt + ← →` o kerning com a letra anterior; com `Shift`, de 10 em 10. `Esc` volta a desenhar essa letra.
 
 ## 5. Acentos
 
@@ -196,7 +208,9 @@ Um **master** é um estilo desenhado. Até aqui você tem um: o Regular.
 <img src="screenshots/weights-daca.png" alt="Um glifo do Bold com o Regular ao fundo e o painel de compatibilidade" width="820">
 </div>
 
-**Por que os mesmos pontos?** Para calcular um peso do meio, o programa liga cada ponto do Regular ao mesmo ponto do Bold. Se um lado tem um ponto a mais, a conta não fecha. O painel mostra, em **Compatibilidade entre masters**, se o glifo está certo. Se só a ordem saiu do lugar, **Corrigir compatibilidade** acerta sem mudar a forma. Se faltam pontos, é preciso igualar à mão.
+**Por que os mesmos pontos?** Para calcular um peso do meio, o programa liga cada ponto do Regular ao mesmo ponto do Bold. Se um lado tem um ponto a mais, a conta não fecha. O painel mostra, em **Compatibilidade entre masters**, se o glifo está certo. Se só a ordem saiu do lugar, **Corrigir compatibilidade** acerta sem mudar a forma.
+
+Se faltam pontos, **Adicionar pontos que faltam** dá a cada master os pontos que o outro tem, no mesmo lugar, sem mudar a forma. Para ver onde diferem, ligue **Compatibilidade**: os pontos ganham números, uma linha tracejada vai até o mesmo ponto no outro master, e um anel vermelho marca o que não tem par. **Todos os masters** mostra a letra em cada master embaixo da linha, e **Pré-visualização** a palavra em qualquer peso intermediário. Segure `Alt` ao adicionar ou remover um ponto para fazer isso em todos os masters.
 
 No Bold: hastes de 80 viram cerca de 140; os vazados internos encolhem; as margens ficam um pouco menores. Reveja o espaçamento e o kerning na Prova — cada master tem os seus.
 

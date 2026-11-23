@@ -92,14 +92,25 @@ export function interpolateFonts(a, b, t, styleName) {
  * @param {Array<{location: number, font: object}>} masters
  */
 export function instanceAt(masters, location, styleName) {
+  if (masters.length === 1) return { font: masters[0].font, skipped: [] };
+  const { a, b, t } = bracket(masters, location);
+  return interpolateFonts(a.font, b.font, t, styleName);
+}
+
+/**
+ * The two masters a location falls between, and how far along from the first (0–1; outside the masters
+ * it extrapolates from the two nearest). Masters need a `location`; at least two of them.
+ */
+export function bracket(masters, location) {
   const sorted = [...masters].sort((x, y) => x.location - y.location);
-  if (sorted.length === 1) return { font: sorted[0].font, skipped: [] };
   let i = sorted.findIndex((m) => m.location >= location);
   if (i <= 0) i = i === 0 ? 1 : sorted.length - 1;
   const a = sorted[i - 1]; const b = sorted[i];
-  const t = b.location === a.location ? 0 : (location - a.location) / (b.location - a.location);
-  return interpolateFonts(a.font, b.font, t, styleName);
+  return { a, b, t: b.location === a.location ? 0 : (location - a.location) / (b.location - a.location) };
 }
+
+/** One glyph between two masters at t (they must be compatible: see incompatibility()). */
+export const interpolateGlyph = (a, b, t) => mixGlyph(a, b, t);
 
 const xmlAttr = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
